@@ -1,6 +1,7 @@
 [
   {
-    "version": "unreleased",
+    "version": "1.4.1",
+    "silent": true,
     "improvements": [
       "Hover the line above a space’s open tabs for Close All, which closes them all, groups included, and ⌘Z brings them back.",
       "Undo Close Tab puts a tab back in the group it was in.",
