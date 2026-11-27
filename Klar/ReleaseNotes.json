@@ -5,10 +5,15 @@
       "Hover the line above a space’s open tabs for Close All, which closes them all, groups included, and ⌘Z brings them back.",
       "Undo Close Tab puts a tab back in the group it was in.",
       "The brand icons you can give a group or space are redrawn, and a group or space with one Klar no longer offers, such as Slack’s or OpenAI’s, shows its favicons or letter instead.",
-      "About Klar has a new look, with links to Klar’s website and source code, and an Acknowledgements page for the work Klar is built on and its licenses."
+      "About Klar has a new look, with links to Klar’s website and source code, and an Acknowledgements page for the work Klar is built on and its licenses.",
+      "The + at the bottom of the sidebar opens a menu with New Tab (New Private Tab with ⌥ held), New Group and New Space. A new group starts with a new tab among your open tabs, ready to be named.",
+      "Back and Forward are two buttons side by side, and a button you can’t click doesn’t light up when you point at it.",
+      "A tab’s or pinned site’s menu is in clearer sections, opening it first and putting it away last, with icons for Copy Link, Share and Reading List."
     ],
     "fixes": [
-      "A pinned site you drag to a new place in the grid settles into it from where you let go."
+      "A pinned site you drag to a new place in the grid settles into it from where you let go.",
+      "Refresh is dimmed when there’s no page to refresh.",
+      "Spaces and groups in the Move to Space, Move to and Save to menus show their icons again, as do extensions in the extensions menu."
     ]
   },
   {

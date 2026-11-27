@@ -56,6 +56,13 @@ struct SidebarView: View {
     }
     
     // MARK: - Sidebar Title Bar
+
+    /// A page on screen to refresh: not the empty state, nor a new tab with
+    /// nothing loaded
+    private var canReload: Bool {
+        guard let activeTab = tabManager.activeTab else { return false }
+        return !activeTab.isEmpty
+    }
     
     @ViewBuilder
     private var sidebarTitleBar: some View {
@@ -84,32 +91,17 @@ struct SidebarView: View {
             // Use spacer like regular title bar when sidebar is visible (no divider)
             Spacer()
           
-            // Back and forward hover as one item
-            KlarButtonGroup {
-                KlarButton.titleBarSegment(action: {
+            // Back and forward: a joined pair, each lighting up on its own
+            TitleBarButtonPair(
+                leading: .init(systemImage: "arrow.left", label: "Go Back", help: "Go Back (⌘←)",
+                               isEnabled: tabManager.activeTab?.canGoBack == true) {
                     tabManager.goBackInCurrentTab()
-                }) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 14))
-                        .foregroundColor(tabManager.activeTab?.canGoBack == true ? .secondary : .secondary.opacity(0.4))
-                        .frame(width: 16, height: 16)
-                }
-                .disabled(tabManager.activeTab?.canGoBack != true)
-                .accessibility(label: Text("Go Back"))
-                .help("Go Back (⌘←)")
-
-                KlarButton.titleBarSegment(action: {
+                },
+                trailing: .init(systemImage: "arrow.right", label: "Go Forward", help: "Go Forward (⌘→)",
+                                isEnabled: tabManager.activeTab?.canGoForward == true) {
                     tabManager.goForwardInCurrentTab()
-                }) {
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 14))
-                        .foregroundColor(tabManager.activeTab?.canGoForward == true ? .secondary : .secondary.opacity(0.4))
-                        .frame(width: 16, height: 16)
                 }
-                .disabled(tabManager.activeTab?.canGoForward != true)
-                .accessibility(label: Text("Go Forward"))
-                .help("Go Forward (⌘→)")
-            }
+            )
             .padding(.trailing, 4)
           
             KlarButton.titleBar(action: {
@@ -117,10 +109,10 @@ struct SidebarView: View {
             }) {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 14))
-                    .foregroundColor(tabManager.tabs.isEmpty ? .secondary.opacity(0.4) : .secondary)
+                    .foregroundColor(canReload ? .secondary : .secondary.opacity(0.4))
                     .frame(width: 16, height: 16)
             }
-            .disabled(tabManager.tabs.isEmpty)
+            .disabled(!canReload)
             .accessibility(label: Text("Refresh Page"))
             .help("Refresh Page (⌘R)")
         }

@@ -168,7 +168,7 @@ enum ExtensionMenus {
         for item in running {
             let action = manager.action(for: item.id)
             let menuItem = ClosureMenuItem(title: item.name) { manager.performAction(for: item.id) }
-            menuItem.image = (action?.icon(for: NSSize(width: 16, height: 16))
+            menuItem.setVisibleImage(action?.icon(for: NSSize(width: 16, height: 16))
                 ?? item.webExtension?.icon(for: NSSize(width: 16, height: 16)))
             menuItem.isEnabled = action?.isEnabled ?? true
             menu.addItem(menuItem)

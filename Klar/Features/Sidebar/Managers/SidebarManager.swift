@@ -81,6 +81,10 @@ class SidebarManager: ObservableObject {
     /// Keeps the pinned sites loaded (SidebarManager+PinnedSites).
     internal var pinnedSitesCancellables = Set<AnyCancellable>()
     internal var isPinnedSitesLoadScheduled = false
+    /// What follows New Group from the space bar: the palette once it's
+    /// named, then closing its tab if nothing was opened in it
+    /// (SidebarManager+Groups)
+    internal var newGroupFollowUp: AnyCancellable?
 
     // NotificationCenter block-observer tokens (must be removed individually in deinit)
     private var notificationObservers: [NSObjectProtocol] = []

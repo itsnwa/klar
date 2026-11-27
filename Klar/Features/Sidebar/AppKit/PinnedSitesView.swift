@@ -548,24 +548,23 @@ final class PinnedSitesView: NSView {
         let menu = NSMenu()
         menu.autoenablesItems = false
 
-        SidebarContextMenuFactory.addItem(menu, title: "Unpin") { sidebarManager.unpin(id) }
-        menu.addItem(.separator())
-
-        SidebarContextMenuFactory.addCopyLinkItem(menu, url: tab.url, tabManager: tabManager)
-        SidebarContextMenuFactory.addShareItem(menu, url: tab.url, title: tab.displayTitle, anchor: anchor)
+        // In the saved tabs' sections (`SidebarContextMenuFactory.buildTabMenu`)
         if sidebarManager.isOpenHere(id), sidebarManager.shouldShowReturnToSavedPage(for: id) {
             SidebarContextMenuFactory.addItem(menu, title: "Back to Pinned Page") {
                 _ = sidebarManager.returnToSavedPage(for: id)
             }
         }
-        SidebarContextMenuFactory.addEditSavedPageSubmenu(menu, tabID: id, sidebarManager: sidebarManager)
+        SidebarContextMenuFactory.addSplitItems(menu, itemID: id, tabManager: tabManager)
         menu.addItem(.separator())
 
-        SidebarContextMenuFactory.addMoveToSpaceSubmenu(menu, itemID: id, currentSpaceID: nil, spaceSelection: sidebarManager.spaceSelection)
+        SidebarContextMenuFactory.addCopyLinkItem(menu, url: tab.url, tabManager: tabManager)
+        SidebarContextMenuFactory.addShareItem(menu, url: tab.url, title: tab.displayTitle, anchor: anchor)
         SidebarContextMenuFactory.addReadingListItem(menu, url: tab.url, title: tab.displayTitle, tabManager: tabManager)
         menu.addItem(.separator())
 
-        SidebarContextMenuFactory.addSplitItems(menu, itemID: id, tabManager: tabManager)
+        SidebarContextMenuFactory.addEditSavedPageSubmenu(menu, tabID: id, sidebarManager: sidebarManager)
+        SidebarContextMenuFactory.addMoveToSpaceSubmenu(menu, itemID: id, currentSpaceID: nil, spaceSelection: sidebarManager.spaceSelection)
+        SidebarContextMenuFactory.addItem(menu, title: "Unpin") { sidebarManager.unpin(id) }
         menu.addItem(.separator())
 
         // Always loaded: no Load or Unload Tab

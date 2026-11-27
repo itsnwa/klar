@@ -111,6 +111,7 @@
 		B32DCDB22E68EFEC0015CFD8 /* WebsiteSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32DCDB12E68EFEC0015CFD8 /* WebsiteSettingsView.swift */; };
 		B34497D42DFB058A00FEF2A6 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34497D32DFB058A00FEF2A6 /* ToastView.swift */; };
 		3CA93CF3D5A5AB1D580D202C /* SpaceGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = D832B2907F57FF85147229CF /* SpaceGlass.swift */; };
+		53ADBD710C9CB9D9653E0604 /* MenuItemImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4138EC153B789CF4C879F380 /* MenuItemImage.swift */; };
 		B34497D62DFB07BD00FEF2A6 /* ToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34497D52DFB07BD00FEF2A6 /* ToastManager.swift */; };
 		B34497DA2DFB75BC00FEF2A6 /* SearchSuggestionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34497D82DFB75BC00FEF2A6 /* SearchSuggestionsService.swift */; };
 		B34497DC2DFB75CD00FEF2A6 /* GoogleSuggestionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34497DB2DFB75CD00FEF2A6 /* GoogleSuggestionRow.swift */; };
@@ -351,6 +352,7 @@
 		B32DCDB12E68EFEC0015CFD8 /* WebsiteSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteSettingsView.swift; sourceTree = "<group>"; };
 		B34497D32DFB058A00FEF2A6 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		D832B2907F57FF85147229CF /* SpaceGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceGlass.swift; sourceTree = "<group>"; };
+		4138EC153B789CF4C879F380 /* MenuItemImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemImage.swift; sourceTree = "<group>"; };
 		B34497D52DFB07BD00FEF2A6 /* ToastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastManager.swift; sourceTree = "<group>"; };
 		B34497D82DFB75BC00FEF2A6 /* SearchSuggestionsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSuggestionsService.swift; sourceTree = "<group>"; };
 		B34497DB2DFB75CD00FEF2A6 /* GoogleSuggestionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSuggestionRow.swift; sourceTree = "<group>"; };
@@ -861,6 +863,7 @@
 				B3717D762DF2F60F00B5747A /* ProgressBar.swift */,
 				B34497D32DFB058A00FEF2A6 /* ToastView.swift */,
 				D832B2907F57FF85147229CF /* SpaceGlass.swift */,
+				4138EC153B789CF4C879F380 /* MenuItemImage.swift */,
 				B39643722E11F54000BE3E87 /* NativeWindowButtons.swift */,
 				6D122A554E88A1A0CF9B72F8 /* CompactButton.swift */,
 				7989F536D1EE81436A9A49A0 /* BrowserSheet.swift */,
@@ -1589,6 +1592,7 @@
 				A4A76A69291B8B95779D5F3F /* BrowserWindowSession.swift in Sources */,
 				B34497D42DFB058A00FEF2A6 /* ToastView.swift in Sources */,
 				3CA93CF3D5A5AB1D580D202C /* SpaceGlass.swift in Sources */,
+				53ADBD710C9CB9D9653E0604 /* MenuItemImage.swift in Sources */,
 				B373DDED2DF38BE600480530 /* SidebarSelectionManager.swift in Sources */,
 				B349BB952E02AC4C001D7C41 /* GeolocationBridge.swift in Sources */,
 				567EC3130277089472152812 /* PageIconLoader.swift in Sources */,

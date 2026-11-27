@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// Groups of tabs: of saved tabs (a `SidebarFolder` in the structure) and of
 /// regular tabs below the divider (an `OpenTabGroup` on their open tabs,
@@ -103,6 +104,57 @@ extension SidebarManager {
         store.movePages(pages.map(\.id), before: first.id, into: group, in: tabManager)
         logInfo(.sidebar, "New group with \(pages.count) regular tab(s)")
         return group.id
+    }
+
+    /// New Group in the space bar's + menu: a group among the regular tabs
+    /// with a new, empty tab in it, open and being named. Once it's named,
+    /// the palette opens for the tab's address; the tab joins the group as
+    /// an open tab once it has one. Closed with nothing opened in the tab,
+    /// the tab closes, and the group with it: a group of regular tabs is
+    /// there while it has tabs.
+    func newRegularGroupWithNewTab() {
+        guard let tabManager else { return }
+        newGroupFollowUp = nil
+        let tabID = tabManager.createNewTab()
+        let group = OpenTabGroup(id: UUID(), title: OpenTabGroup.defaultTitle, icon: "")
+        // At the end of the regular tabs, where a new tab goes
+        OpenTabStore.shared.movePages([tabID], before: nil, into: group, in: tabManager)
+        expandedFolders.insert(group.id)
+        isRenaming = group.id
+        logInfo(.sidebar, "New group with a new tab")
+
+        // `$isRenaming` gives the current value first
+        newGroupFollowUp = $isRenaming
+            .dropFirst()
+            .first { $0 != group.id }
+            .sink { [weak self] _ in
+                // Once the rename field has ended editing and let go of focus
+                DispatchQueue.main.async {
+                    self?.openPalette(forNewGroupTab: tabID)
+                }
+            }
+    }
+
+    private func openPalette(forNewGroupTab tabID: UUID) {
+        guard let tabManager, tabManager.activeTabId == tabID,
+              let tab = tabManager.tabs.first(where: { $0.id == tabID }), tab.isEmpty else {
+            newGroupFollowUp = nil
+            return
+        }
+        // Navigates the active tab, the empty one, rather than opening another
+        tabManager.openCommandPaletteForNavigation()
+        newGroupFollowUp = tabManager.$showCommandPalette
+            .dropFirst()
+            .first { !$0 }
+            .sink { [weak self, weak tab] _ in
+                self?.newGroupFollowUp = nil
+                // After the palette's own changes as it closes
+                DispatchQueue.main.async {
+                    guard let self, let tab, tab.isEmpty, let tabManager = self.tabManager,
+                          tabManager.tabs.contains(where: { $0 === tab }) else { return }
+                    tabManager.closeTab(tab)
+                }
+            }
     }
 
     private static func canCreateGroup(in parentID: UUID?, structure: SidebarStructure) -> Bool {

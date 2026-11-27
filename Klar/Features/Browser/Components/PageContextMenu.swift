@@ -133,7 +133,7 @@ extension CustomWKWebView {
         items.append(.separator())
         let print = pageItem("Print \(noun)…", #selector(printFrame(_:)), frame)
         if frame.isMainFrame {
-            print.image = NSImage(systemSymbolName: "printer", accessibilityDescription: nil)
+            print.setVisibleSymbol("printer")
         }
         items.append(print)
         if !frame.isMainFrame {

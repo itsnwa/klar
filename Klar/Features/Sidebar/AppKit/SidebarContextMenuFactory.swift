@@ -38,8 +38,32 @@ enum SidebarContextMenuFactory {
     ) {
         guard let tab = sidebarManager.sidebarStructure.tabs[tabID] else { return }
 
-        addItem(menu, title: "Rename") { sidebarManager.startRenaming(tabID) }
+        // Sections as the library's menus have them: opening it, then
+        // passing its page on (the only items with icons, so they read as
+        // one), then naming and placing it, then putting it away
 
+        // In this window
+        let isOpenHere = sidebarManager.isOpenHere(tabID)
+        if !isOpenHere {
+            addItem(menu, title: "Load Tab") { sidebarManager.loadTab(withID: tabID) }
+        }
+        addSplitItems(menu, itemID: tabID, tabManager: tabManager)
+        // Its page as it's saved; the saved tab stays as it is
+        if !tab.url.isEmpty {
+            addItem(menu, title: "Open in Private Tab") {
+                tabManager.createNewTab(url: tab.url, inSpace: tab.collectionID, isPrivate: true)
+            }
+        }
+
+        menu.addItem(.separator())
+
+        addCopyLinkItem(menu, url: tab.url, tabManager: tabManager)
+        addShareItem(menu, url: tab.url, title: tab.displayTitle, anchor: anchor)
+        addReadingListItem(menu, url: tab.url, title: tab.displayTitle, tabManager: tabManager)
+
+        menu.addItem(.separator())
+
+        addItem(menu, title: "Rename") { sidebarManager.startRenaming(tabID) }
         if tab.customTitle != nil {
             addItem(menu, title: "Clear Custom Title") {
                 // `updateCustomTitle` treats an empty string as "clear",
@@ -51,9 +75,6 @@ enum SidebarContextMenuFactory {
                 sidebarManager.updateCustomTitle(for: tabID, title: "")
             }
         }
-
-        addCopyLinkItem(menu, url: tab.url, tabManager: tabManager)
-        addShareItem(menu, url: tab.url, title: tab.displayTitle, anchor: anchor)
         addEditSavedPageSubmenu(menu, tabID: tabID, sidebarManager: sidebarManager)
 
         menu.addItem(.separator())
@@ -62,28 +83,12 @@ enum SidebarContextMenuFactory {
         addMoveToSubmenu(menu, draggedID: tabID, sidebarManager: sidebarManager)
         addMoveToSpaceSubmenu(menu, itemID: tabID, currentSpaceID: tab.collectionID, spaceSelection: sidebarManager.spaceSelection)
         addItem(menu, title: "Pin Tab") { sidebarManager.pin(itemID: tabID) }
-        addReadingListItem(menu, url: tab.url, title: tab.displayTitle, tabManager: tabManager)
 
         menu.addItem(.separator())
 
-        addSplitItems(menu, itemID: tabID, tabManager: tabManager)
-
-        menu.addItem(.separator())
-
-        // Its page as it's saved; the saved tab stays as it is
-        if !tab.url.isEmpty {
-            addItem(menu, title: "Open in Private Tab") {
-                tabManager.createNewTab(url: tab.url, inSpace: tab.collectionID, isPrivate: true)
-            }
-        }
-
-        // In this window
-        if !sidebarManager.isOpenHere(tabID) {
-            addItem(menu, title: "Load Tab") { sidebarManager.loadTab(withID: tabID) }
-        } else {
+        if isOpenHere {
             addItem(menu, title: "Unload Tab") { sidebarManager.unloadTab(withID: tabID) }
         }
-
         addItem(menu, title: "Remove from Sidebar") { sidebarManager.removeTab(withID: tabID) }
     }
 
@@ -247,8 +252,11 @@ enum SidebarContextMenuFactory {
     }
 
     @discardableResult
-    static func addItem(_ menu: NSMenu, title: String, action: @escaping () -> Void) -> NSMenuItem {
+    static func addItem(_ menu: NSMenu, title: String, symbol: String? = nil, action: @escaping () -> Void) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: #selector(MenuTarget.invoke), keyEquivalent: "")
+        if let symbol {
+            item.setVisibleSymbol(symbol)
+        }
         let target = MenuTarget(handler: action)
         item.target = target
         item.representedObject = target
@@ -346,7 +354,7 @@ enum SidebarContextMenuFactory {
             let target = MenuTarget { spaceSelection?.move(itemID: itemID, toSpace: space.id) }
             item.target = target
             item.representedObject = target
-            item.image = space.icon.image(name: space.name, pointSize: 13)
+            item.setVisibleImage(space.icon.image(name: space.name, pointSize: 13))
             submenu.addItem(item)
         }
 
@@ -405,7 +413,7 @@ enum SidebarContextMenuFactory {
             }
             item.target = target
             item.representedObject = target
-            item.image = icon
+            item.setVisibleImage(icon)
             return item
         }
 
@@ -414,6 +422,7 @@ enum SidebarContextMenuFactory {
 
         // First option: drop directly into this folder.
         let here = NSMenuItem(title: "Move to \(folder.displayTitle)", action: #selector(MenuTarget.invoke), keyEquivalent: "")
+        here.setVisibleImage(icon)
         let hereTarget = MenuTarget {
             let count = structure.folders[folder.id]?.childrenIds.count ?? 0
             sidebarManager.moveItemToPosition(draggedID, containerID: folder.id, index: count)
@@ -428,7 +437,7 @@ enum SidebarContextMenuFactory {
 
         let parent = NSMenuItem(title: folder.displayTitle, action: nil, keyEquivalent: "")
         parent.submenu = submenu
-        parent.image = icon
+        parent.setVisibleImage(icon)
         return parent
     }
 
@@ -462,7 +471,7 @@ enum SidebarContextMenuFactory {
     /// toast notification — same UX as `URLUtilities.removeTrackingParameters`
     /// + `tabManager.toastManager.showToast` on `main`'s SwiftUI menus.
     static func addCopyLinkItem(_ menu: NSMenu, url: String, tabManager: TabManager) {
-        addItem(menu, title: "Copy Link") {
+        addItem(menu, title: "Copy Link", symbol: "link") {
             let result = URLUtilities.removeTrackingParameters(from: url)
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(result.cleanURL, forType: .string)
@@ -478,7 +487,7 @@ enum SidebarContextMenuFactory {
     static func addShareItem(_ menu: NSMenu, url: String, title: String, anchor: NSView) {
         // Anchor weakly — long-lived menu items shouldn't keep the cell
         // alive past its layout-pool lifetime.
-        addItem(menu, title: "Share\u{2026}") { [weak anchor] in
+        addItem(menu, title: "Share\u{2026}", symbol: "square.and.arrow.up") { [weak anchor] in
             guard let anchor = anchor else { return }
             SharingService.shareURL(url, title: title, from: anchor)
         }
@@ -492,6 +501,7 @@ enum SidebarContextMenuFactory {
 
         let label = inList ? "Remove from Reading List" : "Add to Reading List"
         let item = NSMenuItem(title: label, action: #selector(MenuTarget.invoke), keyEquivalent: "")
+        item.setVisibleSymbol("eyeglasses")
         let target = MenuTarget {
             // `MenuTarget`'s `handler` is a non-isolated `() -> Void` so
             // inheriting `Task` doesn't get the main actor for free —
@@ -551,13 +561,14 @@ enum SidebarContextMenuFactory {
             let target = MenuTarget { postSaveTabToSidebar(browserTabID: browserTab.id, parentID: folder.id) }
             item.target = target
             item.representedObject = target
-            item.image = icon
+            item.setVisibleImage(icon)
             return item
         }
 
         let submenu = NSMenu()
         submenu.autoenablesItems = false
         let here = NSMenuItem(title: "Save to \(folder.displayTitle)", action: #selector(MenuTarget.invoke), keyEquivalent: "")
+        here.setVisibleImage(icon)
         let hereTarget = MenuTarget { postSaveTabToSidebar(browserTabID: browserTab.id, parentID: folder.id) }
         here.target = hereTarget
         here.representedObject = hereTarget
@@ -568,7 +579,7 @@ enum SidebarContextMenuFactory {
         }
         let parent = NSMenuItem(title: folder.displayTitle, action: nil, keyEquivalent: "")
         parent.submenu = submenu
-        parent.image = icon
+        parent.setVisibleImage(icon)
         return parent
     }
 
@@ -745,8 +756,19 @@ enum SidebarRegularTabContextMenuFactory {
         // needs `autoenablesItems = false` to take effect.
         menu.autoenablesItems = false
 
+        // In the saved tabs' sections (`buildTabMenu`)
+        SidebarContextMenuFactory.addSplitItems(menu, itemID: browserTab.id, tabManager: tabManager)
+        if !browserTab.isEmpty {
+            SidebarContextMenuFactory.addItem(menu, title: browserTab.isPrivate ? "Reload Outside Private Browsing" : "Reload in Private Tab") {
+                tabManager.reopenTab(browserTab, isPrivate: !browserTab.isPrivate)
+            }
+        }
+
+        menu.addItem(.separator())
+
         SidebarContextMenuFactory.addCopyLinkItem(menu, url: browserTab.url, tabManager: tabManager)
         SidebarContextMenuFactory.addShareItem(menu, url: browserTab.url, title: browserTab.title, anchor: anchor)
+        SidebarContextMenuFactory.addReadingListItem(menu, url: browserTab.url, title: browserTab.title, tabManager: tabManager)
 
         menu.addItem(.separator())
 
@@ -754,19 +776,8 @@ enum SidebarRegularTabContextMenuFactory {
         SidebarContextMenuFactory.addSaveToSubmenu(menu, browserTab: browserTab, sidebarManager: sidebarManager)
         SidebarContextMenuFactory.addMoveToSpaceSubmenu(menu, itemID: browserTab.id, currentSpaceID: SpaceManager.shared.spaceID(of: browserTab), spaceSelection: tabManager.spaceSelection)
         SidebarContextMenuFactory.addItem(menu, title: "Pin Tab") { sidebarManager.pin(itemID: browserTab.id) }
-        SidebarContextMenuFactory.addReadingListItem(menu, url: browserTab.url, title: browserTab.title, tabManager: tabManager)
 
         menu.addItem(.separator())
-
-        SidebarContextMenuFactory.addSplitItems(menu, itemID: browserTab.id, tabManager: tabManager)
-
-        menu.addItem(.separator())
-
-        if !browserTab.isEmpty {
-            SidebarContextMenuFactory.addItem(menu, title: browserTab.isPrivate ? "Reload Outside Private Browsing" : "Reload in Private Tab") {
-                tabManager.reopenTab(browserTab, isPrivate: !browserTab.isPrivate)
-            }
-        }
 
         let closeItem = NSMenuItem(title: "Close Tab", action: #selector(MenuTarget.invoke), keyEquivalent: "")
         let closeTarget = MenuTarget { tabManager.closeTabUndoably(browserTab) }

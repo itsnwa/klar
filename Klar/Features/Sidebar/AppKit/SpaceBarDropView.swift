@@ -10,6 +10,10 @@ final class SpaceDropState: ObservableObject {
     @Published var targetedSpaceID: UUID?
     /// Whether the drag is over the New Space button.
     @Published var isTargetingNewSpace = false
+    /// Whether the + button's menu is open
+    @Published var isNewMenuOpen = false
+    /// Opens the + button's menu (`SpaceBarDropView.showNewMenu`)
+    var showNewMenu: () -> Void = {}
 
     /// In the bar's coordinates (top-left origin). Not published: they're
     /// only read while a drag is on.
@@ -35,6 +39,7 @@ final class SpaceBarDropView: NSView {
     private static let springDelay: TimeInterval = 0.6
 
     var tabManager: TabManager?
+    var sidebarStateManager: SidebarStateManager?
 
     override var isFlipped: Bool { true }
 
@@ -55,6 +60,9 @@ final class SpaceBarDropView: NSView {
         ])
 
         registerForDraggedTypes([SidebarPasteboardTypes.sidebarItem, .URL])
+        dropState.showNewMenu = { [weak self] in
+            self?.showNewMenu()
+        }
     }
 
     @available(*, unavailable)
@@ -62,6 +70,83 @@ final class SpaceBarDropView: NSView {
 
     func update(rootView: AnyView) {
         hostingView.rootView = rootView
+    }
+
+    // MARK: - New menu
+
+    /// The + menu's New Tab, while it's open: New Private Tab with ⌥ held
+    private weak var newTabMenuItem: NSMenuItem?
+
+    /// The + button's menu, above it and lined up with its trailing edge:
+    /// New Tab (New Private Tab with ⌥ held, as the sidebar's New Tab row)
+    /// and New Group, among the regular tabs, and New Space. Dropped on,
+    /// the button makes a space without it.
+    func showNewMenu() {
+        guard !dropState.isNewMenuOpen else { return }
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+
+        let newTab = SidebarContextMenuFactory.addItem(menu, title: "New Tab") { [weak self] in
+            self?.sidebarStateManager?.show(.space)
+            self?.tabManager?.openCommandPaletteForNewTab(isPrivate: NSEvent.modifierFlags.contains(.option))
+        }
+
+        let newGroup = SidebarContextMenuFactory.addItem(menu, title: "New Group") { [weak self] in
+            self?.sidebarStateManager?.show(.space)
+            self?.tabManager?.sidebarManager?.newRegularGroupWithNewTab()
+        }
+        newGroup.setVisibleSymbol("folder.badge.plus")
+
+        menu.addItem(.separator())
+
+        let newSpace = SidebarContextMenuFactory.addItem(menu, title: "New Space") { [weak self] in
+            SpaceManager.shared.createSpace(switchingIn: self?.tabManager?.spaceSelection)
+            self?.sidebarStateManager?.show(.space)
+        }
+        newSpace.setVisibleSymbol("rectangle.stack.badge.plus")
+
+        // As wide as with New Private Tab, so ⌥ doesn't move its edge
+        Self.configure(newTab, isPrivate: true)
+        menu.minimumWidth = menu.size.width
+        Self.configure(newTab, isPrivate: NSEvent.modifierFlags.contains(.option))
+        newTabMenuItem = newTab
+
+        // ⌥ while the menu is open: a menu's tracking takes the key events,
+        // and an alternate item (`isAlternate`) can't show a shortcut of its
+        // own, so New Tab follows the modifier keys itself
+        let modifierWatch = Timer(timeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.updateNewTabMenuItem()
+            }
+        }
+        RunLoop.main.add(modifierWatch, forMode: .eventTracking)
+
+        // This view is flipped: up is toward a smaller y
+        let button = dropState.newSpaceFrame
+        let size = menu.size
+        let origin = NSPoint(x: button.maxX - size.width, y: button.minY - 4 - size.height)
+        dropState.isNewMenuOpen = true
+        menu.popUp(positioning: nil, at: origin, in: self)
+        dropState.isNewMenuOpen = false
+        modifierWatch.invalidate()
+        newTabMenuItem = nil
+    }
+
+    private func updateNewTabMenuItem() {
+        guard let item = newTabMenuItem else { return }
+        let isPrivate = NSEvent.modifierFlags.contains(.option)
+        if (item.tag == 1) != isPrivate {
+            Self.configure(item, isPrivate: isPrivate)
+        }
+    }
+
+    /// New Tab (⌘T) or New Private Tab (⇧⌘T)
+    private static func configure(_ item: NSMenuItem, isPrivate: Bool) {
+        item.title = isPrivate ? "New Private Tab" : "New Tab"
+        item.setVisibleSymbol(isPrivate ? "sunglasses" : "plus.square")
+        item.keyEquivalent = "t"
+        item.keyEquivalentModifierMask = isPrivate ? [.command, .shift] : .command
+        item.tag = isPrivate ? 1 : 0
     }
 
     // MARK: - Targets
@@ -193,11 +278,13 @@ struct SpaceBarDropContainer: NSViewRepresentable {
     func makeNSView(context: Context) -> SpaceBarDropView {
         let view = SpaceBarDropView(rootView: rootView, dropState: dropState)
         view.tabManager = tabManager
+        view.sidebarStateManager = sidebarStateManager
         return view
     }
 
     func updateNSView(_ view: SpaceBarDropView, context: Context) {
         view.tabManager = tabManager
+        view.sidebarStateManager = sidebarStateManager
     }
 
     private var rootView: AnyView {

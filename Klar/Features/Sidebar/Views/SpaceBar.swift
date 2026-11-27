@@ -106,10 +106,11 @@ struct SpaceBar: View {
         .help("Overview: Downloads, Reading List, History and all spaces (⇧⌘O)")
     }
 
+    /// New Tab, New Group or New Space, from a menu (`SpaceBarDropView`).
+    /// A tab dropped on it goes to a new space.
     private var newSpaceButton: some View {
         KlarButton.titleBar(action: {
-            SpaceManager.shared.createSpace(switchingIn: spaceSelection)
-            sidebarStateManager.show(.space)
+            dropState.showNewMenu()
         }) {
             Image(systemName: "plus")
                 .font(.system(size: 13))
@@ -117,12 +118,12 @@ struct SpaceBar: View {
                 .frame(width: 16, height: 16)
         }
         .background {
-            TitleBarHoverBackground(isHovering: dropState.isTargetingNewSpace)
+            TitleBarHoverBackground(isHovering: dropState.isTargetingNewSpace || dropState.isNewMenuOpen)
         }
         .scaleEffect(dropState.isTargetingNewSpace ? 1.12 : 1)
         .animation(.bouncy(duration: 0.3), value: dropState.isTargetingNewSpace)
-        .accessibilityLabel(Text("New Space"))
-        .help("New Space")
+        .accessibilityLabel(Text("New"))
+        .help("New Tab, Group or Space")
     }
 
     /// Another space: switch to it. The active one: the overview, or back
