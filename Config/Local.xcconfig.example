@@ -1,0 +1,19 @@
+// Your own signing for building Klar. Copy this file to Local.xcconfig, beside it; git
+// ignores that copy. Then pick one of the two below.
+//
+// Klar-Local.entitlements leaves out what only Klar's own team can sign for: iCloud sync
+// and push, and accounts and codes from Apple's Passwords app. Everything else works.
+
+PRODUCT_BUNDLE_IDENTIFIER = com.example.klar
+CODE_SIGN_ENTITLEMENTS = Klar/Klar-Local.entitlements
+KLAR_ICLOUD_CONTAINER =
+
+// 1. With an Apple developer team (a free one works): your Team ID, from Xcode ›
+//    Settings › Accounts, or the Membership page of developer.apple.com.
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+// 2. Without one: sign to run on this Mac only. Remove the DEVELOPMENT_TEAM line above
+//    and uncomment these.
+// DEVELOPMENT_TEAM =
+// CODE_SIGN_IDENTITY = -
+// ENABLE_HARDENED_RUNTIME = NO

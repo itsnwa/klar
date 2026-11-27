@@ -1,0 +1,13 @@
+{
+  "data" : [
+    {
+      "filename" : "gpl-3.0.txt",
+      "idiom" : "universal",
+      "universal-type-identifier" : "public.plain-text"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -1,0 +1,23 @@
+// Klar's signing and identity: the team that signs it, its bundle identifier, iCloud
+// container and entitlements. The Klar target's Debug and Release configurations are
+// based on this file.
+//
+// To build under your own Apple developer team, or with none, copy
+// Local.xcconfig.example to Local.xcconfig beside this file and change it there: git
+// ignores Local.xcconfig, and what it sets replaces what's here.
+
+DEVELOPMENT_TEAM = C4H3XBVK2C
+PRODUCT_BUNDLE_IDENTIFIER = com.itsnwa.browser
+CODE_SIGN_IDENTITY = Apple Development
+ENABLE_HARDENED_RUNTIME = YES
+CODE_SIGN_ENTITLEMENTS = Klar/Klar.entitlements
+
+// The CloudKit container iCloud sync uses (CloudSyncManager, through Info.plist), as
+// listed in the entitlements. Sync stays off in a build whose entitlements don't list it.
+KLAR_ICLOUD_CONTAINER = iCloud.com.itsnwa.browser
+
+// The update feed (SUFeedURL): none here, so only builds `ship` makes, which set it to the latest
+// GitHub release's appcast.xml, look for updates.
+KLAR_UPDATE_FEED =
+
+#include? "Local.xcconfig"

@@ -1,0 +1,691 @@
+{
+  "version": "16.38.1",
+  "icons": [
+    {
+      "name": "brand-swift",
+      "brand": "Swift",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://developer.apple.com/swift/resources/"
+    },
+    {
+      "name": "brand-c",
+      "brand": "C",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://commons.wikimedia.org/wiki/File:The_C_Programming_Language_logo.svg"
+    },
+    {
+      "name": "brand-cplusplus",
+      "brand": "C++",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/isocpp/logos/tree/64ef037049f87ac74875dbe72695e59118b52186"
+    },
+    {
+      "name": "brand-java",
+      "brand": "OpenJDK",
+      "license": "BSD-3-Clause",
+      "licenseURL": null,
+      "source": "https://hg.openjdk.java.net/duke/duke/file/ca00f100dafc/vector/Agent.svg"
+    },
+    {
+      "name": "brand-kotlin",
+      "brand": "Kotlin",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.jetbrains.com/company/brand/logos/"
+    },
+    {
+      "name": "brand-scala",
+      "brand": "Scala",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.scala-lang.org"
+    },
+    {
+      "name": "brand-groovy",
+      "brand": "Apache Groovy",
+      "license": "Apache-2.0",
+      "licenseURL": null,
+      "source": "https://apache.org/logos"
+    },
+    {
+      "name": "brand-go",
+      "brand": "Go",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://blog.golang.org/go-brand"
+    },
+    {
+      "name": "brand-rust",
+      "brand": "Rust",
+      "license": "CC-BY-SA-4.0",
+      "licenseURL": null,
+      "source": "https://www.rust-lang.org"
+    },
+    {
+      "name": "brand-python",
+      "brand": "Python",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.python.org/community/logos/"
+    },
+    {
+      "name": "brand-ruby",
+      "brand": "Ruby",
+      "license": "CC-BY-SA-2.5",
+      "licenseURL": null,
+      "source": "https://www.ruby-lang.org/en/about/logo/"
+    },
+    {
+      "name": "brand-php",
+      "brand": "PHP",
+      "license": "CC-BY-SA-4.0",
+      "licenseURL": null,
+      "source": "https://php.net/download-logos.php"
+    },
+    {
+      "name": "brand-perl",
+      "brand": "Perl",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/metacpan/perl-assets/blob/56b555711934dde8fd0b20ec29ecc3bf81a3d493/blessed/src/010.svg"
+    },
+    {
+      "name": "brand-r",
+      "brand": "R",
+      "license": "CC-BY-SA-4.0",
+      "licenseURL": null,
+      "source": "https://www.r-project.org/logo/"
+    },
+    {
+      "name": "brand-dart",
+      "brand": "Dart",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/dart-lang/site-shared/tree/18458ff440afd3d06f04e5cb871c4c5eda29c9d5/src/_assets/image/dart/logo"
+    },
+    {
+      "name": "brand-clojure",
+      "brand": "Clojure",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Clojure_logo.svg"
+    },
+    {
+      "name": "brand-javascript",
+      "brand": "JavaScript",
+      "license": "MIT",
+      "licenseURL": null,
+      "source": "https://github.com/voodootikigod/logo.js/blob/1544bdeed6d618a6cfe4f0650d04ab8d9cfa76d9/js.svg"
+    },
+    {
+      "name": "brand-typescript",
+      "brand": "TypeScript",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.typescriptlang.org/branding"
+    },
+    {
+      "name": "brand-html5",
+      "brand": "HTML5",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.w3.org/html/logo/"
+    },
+    {
+      "name": "brand-css3",
+      "brand": "CSS",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/CSS-Next/logo.css/blob/bacc20878227204b283c68a6b935f8279e06b0cd/css.svg"
+    },
+    {
+      "name": "brand-less",
+      "brand": "Less",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/less/logo/blob/c9c10c328cfc00071e92443934b35e389310abf8/less_logo.ai"
+    },
+    {
+      "name": "brand-bash",
+      "brand": "GNU Bash",
+      "license": "MIT",
+      "licenseURL": null,
+      "source": "https://github.com/odb/official-bash-logo/tree/61eff022f2dad3c7468f5deb4f06652d15f2c143"
+    },
+    {
+      "name": "brand-latex",
+      "brand": "LaTeX",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/latex3/branding/tree/9def6b5f6075567d62b67424e11dbe6d4d5245b4"
+    },
+    {
+      "name": "brand-markdown",
+      "brand": "Markdown",
+      "license": "CC0-1.0",
+      "licenseURL": null,
+      "source": "https://github.com/dcurtis/markdown-mark/tree/360a3657fef7f6ad0b303296a95ad52985caa0d3"
+    },
+    {
+      "name": "brand-processing",
+      "brand": "Processing Foundation",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://processingfoundation.org"
+    },
+    {
+      "name": "brand-react",
+      "brand": "React",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/facebook/create-react-app/blob/282c03f9525fdf8061ffa1ec50dce89296d916bd/test/fixtures/relative-paths/src/logo.svg"
+    },
+    {
+      "name": "brand-redux",
+      "brand": "Redux",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/reduxjs/redux/blob/abb5f892f7e46849e5ca9bc13e75cfbc944a71b6/logo/logo.svg"
+    },
+    {
+      "name": "brand-angularjs",
+      "brand": "Angular",
+      "license": "CC-BY-4.0",
+      "licenseURL": null,
+      "source": "https://angular.dev/press-kit"
+    },
+    {
+      "name": "brand-svelte",
+      "brand": "Svelte",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/sveltejs/branding/blob/c4dfca6743572087a6aef0e109ffe3d95596e86a/svelte-logo.svg"
+    },
+    {
+      "name": "brand-ember",
+      "brand": "Ember.js",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://emberjs.com/logos/"
+    },
+    {
+      "name": "brand-backbonejs",
+      "brand": "Backbone.js",
+      "license": "MIT",
+      "licenseURL": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Backbone.js_logo.svg"
+    },
+    {
+      "name": "brand-jquery",
+      "brand": "jQuery",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://brand.jquery.org/logos/"
+    },
+    {
+      "name": "brand-nextjs",
+      "brand": "Next.js",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://vercel.com/design/brands#next-js"
+    },
+    {
+      "name": "brand-nuxtjs",
+      "brand": "Nuxt",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://nuxt.com/design-kit"
+    },
+    {
+      "name": "brand-gatsby",
+      "brand": "Gatsby",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.gatsbyjs.com/guidelines/logo"
+    },
+    {
+      "name": "brand-hugo",
+      "brand": "Hugo",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://gohugo.io"
+    },
+    {
+      "name": "brand-eleventy",
+      "brand": "Eleventy",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.11ty.dev"
+    },
+    {
+      "name": "brand-meteor",
+      "brand": "Meteor",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://meteor.com/brand-assets"
+    },
+    {
+      "name": "brand-nodejs",
+      "brand": "Node.js",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://nodejs.org/en/about/branding"
+    },
+    {
+      "name": "brand-express",
+      "brand": "Express",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/openjs-foundation/artwork/blob/3816245ebbf4707bdafde748350ac8476b6b5b62/projects/express/express-icon-black.svg"
+    },
+    {
+      "name": "brand-django",
+      "brand": "Django",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.djangoproject.com/community/logos/"
+    },
+    {
+      "name": "brand-flask",
+      "brand": "Flask",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/pallets/flask/blob/85c5d93cbd049c4bd0679c36fd1ddcae8c37b642/docs/_static/flask-icon.svg"
+    },
+    {
+      "name": "brand-rails",
+      "brand": "Ruby on Rails",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/simple-icons/simple-icons/issues/9619#issuecomment-1735150580"
+    },
+    {
+      "name": "brand-laravel",
+      "brand": "Laravel",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/laravel/art/tree/5a8325b064634b900f25dbb6f1cafd888b2d2211"
+    },
+    {
+      "name": "brand-symfony",
+      "brand": "Symfony",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://symfony.com/logo"
+    },
+    {
+      "name": "brand-spring",
+      "brand": "Spring",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://spring.io/trademarks"
+    },
+    {
+      "name": "brand-dotnet",
+      "brand": ".NET",
+      "license": "CC0-1.0",
+      "licenseURL": null,
+      "source": "https://github.com/dotnet/brand/blob/c7d0f51b8ec59531332d05fb27a5b758a7a3d689/logo/dotnet-logo.svg"
+    },
+    {
+      "name": "brand-flutter",
+      "brand": "Flutter",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://flutter.dev/brand"
+    },
+    {
+      "name": "brand-electron",
+      "brand": "Electron",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.electronjs.org"
+    },
+    {
+      "name": "brand-bootstrap",
+      "brand": "Bootstrap",
+      "license": "MIT",
+      "licenseURL": null,
+      "source": "https://getbootstrap.com/docs/5.3/about/brand"
+    },
+    {
+      "name": "brand-d3js",
+      "brand": "D3",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/d3/d3-logo/tree/6d9c471aa852033501d00ca63fe73d9f8be82d1d"
+    },
+    {
+      "name": "brand-threejs",
+      "brand": "Three.js",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/mrdoob/three.js/blob/a567b810cfcb7f6a03e4faea99f03c53081da477/files/icon.svg"
+    },
+    {
+      "name": "brand-opengl",
+      "brand": "OpenGL",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.khronos.org/legal/trademarks"
+    },
+    {
+      "name": "brand-handlebars",
+      "brand": "Handlebars.js",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/handlebars-lang/docs/blob/13a2e2d9e31ebff4295924ea366abf3062e47ede/src/.vuepress/public/icons/handlebarsjs-icon.svg"
+    },
+    {
+      "name": "brand-babel",
+      "brand": "Babel",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/babel/website/blob/93330158b6ecca1ab88d3be8dbf661f5c2da6c76/website/static/img/babel-black.svg"
+    },
+    {
+      "name": "brand-grunt",
+      "brand": "Grunt",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/gruntjs/gruntjs.com/blob/70f43898d9ce8e6cc862ad72bf8a7aee5ca199a9/src/media/grunt-logo-no-wordmark.svg"
+    },
+    {
+      "name": "brand-gulp",
+      "brand": "gulp",
+      "license": "CC0-1.0",
+      "licenseURL": null,
+      "source": "https://github.com/gulpjs/artwork/blob/4e14158817ac88e9a5c02b3b307e6f630fe222fb/gulp-white-text.svg"
+    },
+    {
+      "name": "brand-npm",
+      "brand": "npm",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.npmjs.com"
+    },
+    {
+      "name": "brand-wordpress",
+      "brand": "WordPress",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://wordpress.org/about/logos"
+    },
+    {
+      "name": "brand-drupal",
+      "brand": "Drupal",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.drupal.org/about/media-kit/logos"
+    },
+    {
+      "name": "brand-webflow",
+      "brand": "Webflow",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://brand-at.webflow.io/resources#logos"
+    },
+    {
+      "name": "brand-unity",
+      "brand": "Unity",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://brand.unity.com"
+    },
+    {
+      "name": "brand-anthropic",
+      "brand": "Anthropic",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.anthropic.com"
+    },
+    {
+      "name": "brand-deepseek",
+      "brand": "DeepSeek",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.deepseek.com"
+    },
+    {
+      "name": "brand-mistral",
+      "brand": "Mistral AI",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://chat.mistral.ai"
+    },
+    {
+      "name": "brand-perplexity",
+      "brand": "Perplexity",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.perplexity.ai"
+    },
+    {
+      "name": "brand-ollama",
+      "brand": "Ollama",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/ollama/ollama/issues/2152#issuecomment-1905286922"
+    },
+    {
+      "name": "brand-openrouter",
+      "brand": "OpenRouter",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://openrouter.ai"
+    },
+    {
+      "name": "brand-mcp",
+      "brand": "Model Context Protocol",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/modelcontextprotocol/docs/blob/573dc60c2e7aab2605b29d0bf27194aa7b02e4fb/logo/light.svg"
+    },
+    {
+      "name": "brand-pytorch",
+      "brand": "PyTorch",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/pytorch/pytorch.github.io/blob/8f083bd12192ca12d5e1c1f3d236f4831d823d8f/assets/images/logo.svg"
+    },
+    {
+      "name": "brand-tensorflow",
+      "brand": "TensorFlow",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.tensorflow.org"
+    },
+    {
+      "name": "brand-git",
+      "brand": "Git",
+      "license": "CC-BY-3.0",
+      "licenseURL": null,
+      "source": "https://git-scm.com/community/logos"
+    },
+    {
+      "name": "brand-github",
+      "brand": "GitHub",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/logos"
+    },
+    {
+      "name": "brand-gitlab",
+      "brand": "GitLab",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://about.gitlab.com/press/press-kit/"
+    },
+    {
+      "name": "brand-docker",
+      "brand": "Docker",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.docker.com/company/newsroom/media-resources"
+    },
+    {
+      "name": "brand-kubernetes",
+      "brand": "Kubernetes",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://github.com/kubernetes/kubernetes/tree/cac53883f4714452f3084a22e4be20d042a9df33/logo"
+    },
+    {
+      "name": "brand-firebase",
+      "brand": "Firebase",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://firebase.google.com/brand-guidelines"
+    },
+    {
+      "name": "brand-vercel",
+      "brand": "Vercel",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://vercel.com/geist/brands"
+    },
+    {
+      "name": "brand-mysql",
+      "brand": "MySQL",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.mysql.com/about/legal/logos.html"
+    },
+    {
+      "name": "brand-postgresql",
+      "brand": "PostgreSQL",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://wiki.postgresql.org/wiki/Logo"
+    },
+    {
+      "name": "brand-xcode",
+      "brand": "Xcode",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://developer.apple.com/develop"
+    },
+    {
+      "name": "brand-vim",
+      "brand": "Vim",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Vimlogo.svg"
+    },
+    {
+      "name": "brand-emacs",
+      "brand": "GNU Emacs",
+      "license": "GPL-2.0-or-later",
+      "licenseURL": null,
+      "source": "https://git.savannah.gnu.org/cgit/emacs.git/tree/etc/images/icons/hicolor/scalable/apps/emacs.svg"
+    },
+    {
+      "name": "brand-figma",
+      "brand": "Figma",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.figma.com/using-the-figma-brand/"
+    },
+    {
+      "name": "brand-sketch",
+      "brand": "Sketch",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.sketch.com/about-us/#press"
+    },
+    {
+      "name": "brand-blender",
+      "brand": "Blender",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.blender.org/about/logo"
+    },
+    {
+      "name": "brand-maya",
+      "brand": "Autodesk Maya",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://area.autodesk.com/learn/courses/maya-intro"
+    },
+    {
+      "name": "brand-jira",
+      "brand": "Jira",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://atlassian.design/resources/logo-library"
+    },
+    {
+      "name": "brand-raycast",
+      "brand": "Raycast",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.raycast.com/press"
+    },
+    {
+      "name": "brand-arduino",
+      "brand": "Arduino",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.arduino.cc"
+    },
+    {
+      "name": "brand-raspberrypi",
+      "brand": "Raspberry Pi",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.raspberrypi.org/trademark-rules"
+    },
+    {
+      "name": "brand-gnu",
+      "brand": "GNU",
+      "license": "CC-BY-SA-2.0",
+      "licenseURL": null,
+      "source": "https://gnu.org"
+    },
+    {
+      "name": "brand-apple",
+      "brand": "Apple",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.apple.com"
+    },
+    {
+      "name": "brand-google",
+      "brand": "Google",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://partnermarketinghub.withgoogle.com"
+    },
+    {
+      "name": "brand-meta",
+      "brand": "Meta",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.meta.com"
+    },
+    {
+      "name": "brand-alibaba",
+      "brand": "Alibaba.com",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.alibabagroup.com/en/ir/reports"
+    },
+    {
+      "name": "brand-x",
+      "brand": "X",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://x.com"
+    },
+    {
+      "name": "brand-youtube",
+      "brand": "YouTube",
+      "license": null,
+      "licenseURL": null,
+      "source": "https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors"
+    }
+  ]
+}

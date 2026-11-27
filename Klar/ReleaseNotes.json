@@ -1,0 +1,465 @@
+[
+  {
+    "version": "unreleased",
+    "improvements": [
+      "Hover the line above a space’s open tabs for Close All, which closes them all, groups included, and ⌘Z brings them back.",
+      "Undo Close Tab puts a tab back in the group it was in.",
+      "The brand icons you can give a group or space are redrawn, and a group or space with one Klar no longer offers, such as Slack’s or OpenAI’s, shows its favicons or letter instead.",
+      "About Klar has a new look, with links to Klar’s website and source code, and an Acknowledgements page for the work Klar is built on and its licenses."
+    ],
+    "fixes": [
+      "A pinned site you drag to a new place in the grid settles into it from where you let go."
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "new": [
+      {
+        "symbol": "square.stack",
+        "title": "Groups",
+        "detail": "Folders are now groups, each showing its tabs’ favicons unless you give it an icon, and your open tabs can be in groups too: ⌘-click tabs to select several, right-click to make a group with them, and drag a group between your saved and open tabs."
+      },
+      {
+        "symbol": "link",
+        "title": "Links open in their group",
+        "detail": "A link you open from a tab in a group opens in that group. You can turn this off in Settings › General."
+      }
+    ],
+    "improvements": [
+      "Settings pages open straight on their settings, with only General keeping its header with Klar’s version and updates."
+    ]
+  },
+  {
+    "version": "1.3.14",
+    "silent": true,
+    "fixes": [
+      "Windows an extension opens, such as Bitwardenâs passkey prompt and pop-out, show their page."
+    ]
+  },
+  {
+    "version": "1.3.13",
+    "fixes": [
+      "Logging in to Bitwarden finishes and opens your vault, also with two-step login, and extension popups close when theyâre done, as they do in Chrome."
+    ]
+  },
+  {
+    "version": "1.3.12",
+    "improvements": [
+      "Tabs in the background stay ready, however many you have open, as in Safari, so going back to one no longer reloads it, unless your Mac runs low on memory.",
+      "Right-clicking a page or a frame in it offers what Safari does: Save Page Asâ¦, Print Pageâ¦, Show Page Source with developer tools on, and Open Frame in New Tab or New Window.",
+      "Open Link or Image in New Window opens a new Klar window, and holding â¥ in a linkâs, imageâs or frameâs menu opens it in a new private tab.",
+      "A split viewâs handle and close button are tinted glass in your spaceâs color too, like the command palette and Find."
+    ],
+    "fixes": [
+      "An update waiting for you to restart makes way for a newer version that comes out meanwhile, so restarting brings Klar fully up to date in one go.",
+      "A pageâs Print or Save as PDF button opens the print dialog over the page.",
+      "Klar stays open when you sign in to a Microsoft work or school account on a Mac managed with Intune.",
+      "Bitwardenâs popup opens to its sign-in instead of a spinner, and other Chrome Web Store extensions that check which browser theyâre in or ask about permissions Klar doesnât have keep working."
+    ]
+  },
+  {
+    "version": "1.3.11",
+    "new": [
+      {
+        "symbol": "arrow.uturn.backward",
+        "title": "Undo closing a tab",
+        "detail": "Press âZ, or choose Edit âº Undo Close Tab, to bring back the tab you just closed, back to where it was in its pageâs history."
+      }
+    ],
+    "improvements": [
+      "The overview leaves out your pinned sites, which go away with your tabs as you zoom out, so it has the whole sidebar under the address.",
+      "Klar frees memory from tabs you arenât using on its own, keeping their history, so a saved tab stays open until you unload it (Offload Tab is now Unload Tab) and Settings âº General no longer asks how many to keep loaded.",
+      "Klar âº Whatâs Newâ¦ switches to the Whatâs New tab when one is already open, instead of opening another.",
+      "Turn on Web developer tools in Settings âº General to get Inspect Element in every pageâs menu and inspect Klarâs pages and extensions from Safariâs Develop menu.",
+      "â-click or middle-click a link to open it in a new tab behind the one youâre on (â§â-click to switch to it), and Open Link in New Tab opens it in the background too."
+    ],
+    "fixes": [
+      "A tab you opened from a saved tabâs site shows when you click it, instead of the saved tab.",
+      "When a page canât be opened, the address bar and the error page show the address that failed, so you can copy it or try again, also after a sign-in sends you to it.",
+      "Search fields, links and buttons at the very top of a page, such as Discogsâ search, take your clicks instead of moving the window."
+    ]
+  },
+  {
+    "version": "1.3.10",
+    "new": [
+      {
+        "symbol": "square.and.arrow.down",
+        "title": "Import from Dia",
+        "detail": "Bring your Dia spaces with their pinned tabs and folders into Klar, and their favorites as pinned sites, from Settings âº Import or when you set up Klar."
+      }
+    ],
+    "improvements": [
+      "Extensions you added in Dia can be brought over from Settings âº Import or Extensions."
+    ]
+  },
+  {
+    "version": "1.3.9",
+    "improvements": [
+      "The command palette, Find, the loading bar and notices are tinted glass in your spaceâs color, dark in dark mode and milky in light.",
+      "Pinned sites scroll away with the overview, giving it the whole sidebar under the address."
+    ],
+    "fixes": [
+      "Klarâs own pages, like Whatâs New, show their icon at the same size as other sitesâ icons.",
+      "A tab you drag in the sidebar stays under the pointer while another tab peeks out of a closed folder."
+    ]
+  },
+  {
+    "version": "1.3.8",
+    "new": [
+      {
+        "symbol": "face.smiling",
+        "title": "A new icon picker",
+        "detail": "Browse symbols, emoji and icons for your folders and spaces in groups, with your recent picks first, and search all of them at once, picking with the arrow keys and Return."
+      },
+      {
+        "symbol": "rectangle.split.2x1",
+        "title": "Move between split panes",
+        "detail": "Press ââ and an arrow key to go to the pane on that side of a split view."
+      },
+      {
+        "symbol": "sparkles",
+        "title": "Ask AI from Find",
+        "detail": "Open chat with the sparkle button in Find, try a starter prompt, and jump from a quote in an answer to the passage on the page."
+      }
+    ],
+    "improvements": [
+      "Favicons have rounded corners and follow Klarâs appearance when a site offers light and dark icons.",
+      "The Personal space starts in Graphite when you set up Klar.",
+      "Split views open and close smoothly: a new pane slides in as the page beside it makes room, and a closed one slides away as its neighbor fills the space."
+    ],
+    "fixes": [
+      "When you open a new tab in the foreground, the sidebar scrolls to show it."
+    ]
+  },
+  {
+    "version": "1.3.7",
+    "fixes": [
+      "Pressing âL on a Klar page like Whatâs New shows its correct address in the Go to URL row.",
+      "A new Mac set up with iCloud gets all your spaces, saved tabs and pinned sites, and its first space joins the one it matches.",
+      "Going to another page in a regular tab follows on your other Macs, and regular tabs no longer show up twice."
+    ]
+  },
+  {
+    "version": "1.3.6",
+    "new": [
+      {
+        "symbol": "arrow.down.circle",
+        "title": "Updates in the sidebar",
+        "detail": "When thereâs a new version of Klar, the sidebar will now show it, you will also see it in the command palette. After restarting Klar, Whatâs New opens in a tab."
+      },
+      {
+        "symbol": "sparkles",
+        "title": "Ask Claude or Codex",
+        "detail": "Ask about the page youâre on with the Claude or ChatGPT subscription you already have, through Claude Code or Codex on your Mac, or keep using Ollama, chosen in Settings âº AI."
+      },
+      {
+        "symbol": "text.bubble",
+        "title": "Richer AI answers",
+        "detail": "Answers in Find show tables, code with a Copy button and cards for the pages they link to, and you can ask follow-up questions or stop an answer midway."
+      },
+      {
+        "symbol": "binoculars",
+        "title": "Explore with AI",
+        "detail": "Press âK on any page to find sites like it, where people discuss it, or other sources on it: Claude or Codex searches the web and lays out what it finds as a page, kept in the sidebarâs overview and on all your Macs."
+      },
+      {
+        "symbol": "wand.and.stars",
+        "title": "Clean up saved tabs",
+        "detail": "Right-click a space to find pages youâve saved more than once and tabs you havenât opened in months, and remove them in one go, with Undo."
+      },
+      {
+        "symbol": "magnifyingglass",
+        "title": "Your own search engine",
+        "detail": "Search with any site by giving its search address in Settings âº Search, where your site shortcuts now live too."
+      },
+      {
+        "symbol": "hand.wave",
+        "title": "A welcome to Klar",
+        "detail": "Installed fresh, Klar opens with a short setup: bring over Arcâs spaces and your extensions, turn on iCloud, and choose how Klar looks."
+      }
+    ],
+    "improvements": [
+      "Settings has a fresh layout: each page opens with what itâs for, Search and Import have pages of their own, and the window keeps one width.",
+      "Settings âº General âº Default Browser lets you make any browser on your Mac the default, not only Klar.",
+      "Connecting the Passwords app is simpler: type its code into six boxes laid out as Passwords shows it, and Klar connects as soon as the last digit is in.",
+      "The shortcuts on the empty page have plain keys instead of glass.",
+      "A thin line at the top and bottom of the sidebar shows when thereâs more to scroll to, instead of the content fading out.",
+      "AI answers in Find link to whatâs actually on the page, and the panel is easier to read over busy pages.",
+      "After Find finds nothing, typing on keeps Ask AI ready instead of searching the page again."
+    ],
+    "fixes": [
+      "Holding â in the command palette moves smoothly through all your tabs, without stopping to load more.",
+      "Sites that check your browser before showing their page, such as some Tumblr blogs, now show their icon.",
+      "The empty page follows your Macâs appearance, white in light mode and black in dark mode.",
+      "Add to Reading List, from the Share menu or Klarâs own commands, saves the page and keeps you in Klar, without bringing Safari to the front.",
+      "Closing Find or switching tabs stops an AI answer thatâs still coming, instead of leaving it running."
+    ]
+  },
+  {
+    "version": "1.3.5",
+    "new": [
+      {
+        "symbol": "macwindow.on.rectangle",
+        "title": "The same tabs everywhere",
+        "detail": "Every window now has the same open tabs, and with iCloud sync on, so do your other Macs: a tab you open on one shows up on the others, and closing it closes it everywhere."
+      }
+    ],
+    "improvements": [
+      "ââ¥â and ââ¥â go to the tab below or above in the sidebar, pinned sites first, and round from the last tab to the first; in a closed folder, they stop at the tabs you have open.",
+      "A mouseâs sideways scroll wheel moves between your spaces and the overview in the sidebar, a space at a time, as swiping on a trackpad does."
+    ],
+    "fixes": [
+      "Dragging a link, image, text or file on or onto a page works without Klar quitting.",
+      "Pressing Escape to close something on a page, or a shortcut that does nothing, no longer makes your Mac beep.",
+      "With iCloud sync on, your passwords show up in autofill and in Settings âº Passwords also when Klar opened while your Mac was locked.",
+      "After âL, the arrow keys move through the suggestions for the pageâs address, keeping it in the field instead of clearing it.",
+      "Moving through the command palette with the arrow keys shows âLoading moreâ¦â only while there are more tabs to show."
+    ]
+  },
+  {
+    "version": "1.3.4",
+    "new": [
+      {
+        "symbol": "macwindow.on.rectangle",
+        "title": "More than one window",
+        "detail": "Open another window with File âº New Window (âN): each has its own tabs and shares your spaces, pinned sites and saved tabs, and Klar brings all of them back when you open it again."
+      }
+    ],
+    "improvements": [
+      "Choose how long Klar keeps your history in Settings âº General âº Remove history items. As in Safari, itâs a year unless you pick otherwise, and older pages are removed when Klar opens and once a day.",
+      "Searching your history in the command palette and the History list stays instant however much history you have, and the History list keeps its place as you browse.",
+      "Sign-in and payment windows a site opens stay open until you close them, instead of closing after five minutes.",
+      "Klar only asks a site for its icon at its front page, a site without one isnât asked again every time you visit, and icons update when a site changes its own.",
+      "From now on, Klar stays connected to the Passwords app after you quit it, so thereâs no new code to enter when you open it again or it updates; while itâs closed, it shows in the Dock as running in the background, and quitting it there disconnects.",
+      "Deleting a folder or space with many saved tabs is quicker and goes straight to the next tab.",
+      "The command palette keeps up as you type, and what you type the moment it opens goes into it.",
+      "After a site shortcut, the palette finds your earlier searches on that site however long ago you made them.",
+      "While something downloads, the overview button at the bottom of the sidebar shows its progress in a ring around the icon, which goes away once itâs done.",
+      "Dragging a pinned site out of the sidebar shows its page, as dragging a tab does, so you can drop it beside the page you were on to see both side by side.",
+      "Drag your open tabs under New Tab up and down to put them in the order you like, and tabs dropped there make room where theyâll go, as among your saved tabs."
+    ],
+    "fixes": [
+      "Klar opens in the space you left, also when a pinned site or saved tab was showing as you quit.",
+      "Saved tabs and pinned sites you had open come back open when you reopen Klar, on the page you left them on.",
+      "New folders and saved tabs at the top of a space show up at the end of its list right away, instead of in between until Klar is reopened.",
+      "Password, code and My Card suggestions appear right under the box youâre in, also on zoomed pages and in sign-in boxes embedded in a page, and close as you type, scroll, press Return or switch tabs.",
+      "HTML files open in Klar from Finder, Open With and the open command, and a saved tab on a file on your Mac stays saved.",
+      "Saved tabs and the tabs Klar reopens keep their whole address, so YouTube playlists, forum threads and searches with a + in them open where you left them.",
+      "Typing localhost:3000, an address with a port, or a site: search in the command palette opens or searches it, instead of offering to open an app.",
+      "Typing localhost or a local IP address, like your routerâs, opens it over HTTP, so local servers and routers load.",
+      "Links that open another app always ask first.",
+      "Extension pages and other addresses that donât start with http keep their address when you open them from the command palette or your history.",
+      "Ad links you click in Mail, Messages or another app open in Klar.",
+      "Google suggestions show up for searches with letters like Ã¦, Ã¸, Ã¥ and Ã©.",
+      "Only your click on Klarâs certificate warning lets a site with a certificate problem load.",
+      "Visiting a site past its certificate warning trusts its certificate in Klar alone, not in your Macâs other apps, and only until you quit.",
+      "A siteâs access to your location ends when you leave its page.",
+      "Two downloads with the same name are both kept.",
+      "A paused download from a private tab or a space with its own profile resumes in that tabâs session, even after the tab is closed.",
+      "Save Image and Download Linked File use the siteâs sign-in, stay private in a private tab, and show in Downloads.",
+      "Downloads show how much has arrived when a site doesnât give their size, and their real size once theyâre done.",
+      "A download that canât be moved into place shows as failed instead of done, and never replaces a file already there.",
+      "Large files a page makes for you to download no longer make Klar stall.",
+      "A camera, microphone or location permission set back to Ask stays that way, also on your other Macs, and an item you delete stays deleted while iCloud catches up.",
+      "Saving a private tab to the sidebar reopens its page outside private browsing, and two saved tabs with the same address each open their own page.",
+      "âR, âS, â[ and â] work with Caps Lock on.",
+      "After you close Klarâs window, clicking a link in another app, the Dock icon or File âº New Window (âN) opens it again, also with Settings open.",
+      "Keyboard shortcuts act on the window in front: âW closes Settings, a sign-in window or the Web Inspector, and âF searches there, instead of acting on the tab behind it.",
+      "Pressing Return in the command palette while Find is open only opens what you picked.",
+      "âK, âT and âL open the command palette again the way you asked while itâs already open.",
+      "Return, Escape and the arrow keys confirm, cancel and pick Chinese, Japanese and Korean text and accents in the command palette and Find.",
+      "Arrowing down in the command palette scrolls to the search for what you typed.",
+      "Save Tabâ¦ in the command palette names the space the tab is saved to.",
+      "Closing a pinned site with âW takes you back to the tab you were on before.",
+      "With Close tabs after 24 hours of inactivity, tabs you use from the sidebar stay open, and so do tabs on screen.",
+      "Tabs, History and Reading List show each siteâs own icon as you scroll and browse.",
+      "Renaming a space keeps what you type when the sidebar updates.",
+      "The tab under the pointer stays highlighted as you scroll the sidebar.",
+      "Windows a page opens, such as sign-in windows, get autofill and the pageâs color.",
+      "AI answers in Find show Ã¥, Ã¸, accents and emoji correctly.",
+      "Now Playing lets go of a tab paused from it once the tab opens another page.",
+      "Unmuting a tab gives games and web apps back the volume they had when you muted it.",
+      "Turning off an extension also quits the app helper it started, such as 1Passwordâs.",
+      "Settings you edit by hand in ~/.config/klar/config.toml keep their values, including quotes and comments, and Klarâs own site shortcuts get its later additions.",
+      "Removing the tab youâre on from the sidebar keeps its page in front, as a regular tab.",
+      "A pinned site you remove on another Mac goes away here too, instead of staying as a tab."
+    ]
+  },
+  {
+    "version": "1.3.3",
+    "new": [
+      {
+        "symbol": "rectangle.split.2x1",
+        "title": "Split view",
+        "detail": "Press âD, or â§âD to stack them, or drag a tab from the sidebar onto the page, to see tabs side by side; drag a pane by the handle at its top to move it, or the gap between panes to resize them."
+      }
+    ],
+    "improvements": [
+      "The selected tab in the sidebar is a lighter shade with a subtle border, instead of the accent color.",
+      "Dragging a tab you werenât looking at out of the sidebar leaves the tab you were on selected.",
+      "When you drag a tab or folder in the sidebar, the other tabs move out of the way to show where itâll go, and it narrows to fit as you move it into a folder.",
+      "Drag a tab out of the sidebar and it turns into a link to the page itâs on, with a preview of it: drop it in another app to share it, or on the desktop to save a link to it.",
+      "The sidebarâs tabs and lists scroll without a scroll bar.",
+      "Right-click a pinned site to edit the page it opens, as with saved tabs.",
+      "A downloadâs progress stays steady in the sidebar instead of jumping about as its numbers change."
+    ],
+    "fixes": [
+      "Saved tabs keep their own titles while a pinned site loads in the background.",
+      "A tab shows its siteâs icon in the sidebar as soon as it loads, also for sites you havenât visited before.",
+      "Double-click the tab showing under a closed folder to rename it.",
+      "The line between saved tabs and New Tab in the sidebar has even space above and below it."
+    ]
+  },
+  {
+    "version": "1.3.2",
+    "new": [
+      {
+        "symbol": "sunglasses.fill",
+        "title": "Private tabs",
+        "detail": "Hold Option and click New Tab, or press â§âT, for a tab thatâs kept out of your history and forgets its cookies and sign-ins once your private tabs are closed. Right-click a tab or press âK to reload it in or out of private browsing."
+      },
+      {
+        "symbol": "pip.enter",
+        "title": "Picture in Picture from the sidebar",
+        "detail": "Hover over the video playing in the sidebar and click the button in its corner to pop it out to Picture in Picture."
+      },
+      {
+        "symbol": "character.cursor.ibeam",
+        "title": "Site shortcuts",
+        "detail": "Type a word before your search to search a site directly, like âyt catsâ for YouTube. Pick from popular sites or add your own in Settings âº General."
+      }
+    ],
+    "improvements": [
+      "Deleting a folder asks first, and can delete the tabs and folders in it too; kept ones now take the folderâs place in the sidebar.",
+      "Search suggestions come from the search engine you chose in Settings, so only it sees what you type.",
+      "After a site shortcut, your earlier searches on that site are listed, and pressing Return with nothing typed opens the site.",
+      "If a search starts with a shortcutâs word by accident, press Delete to turn it back into a normal search.",
+      "Folders in the sidebar open and close faster, with each tabâs icon showing right away.",
+      "The sidebar slides open and closed faster and more smoothly, and its buttons now show a simple highlight instead of Liquid Glass when you point at them.",
+      "The pageâs colors no longer glow into the sidebar, which saves power.",
+      "In full screen, pages fill the screen edge to edge, even with Inset web pages on.",
+      "The sidebarâs tabs and buttons sit closer to its edges, and so do inset web pages to the windowâs. No bar shows at the sidebarâs edge while you resize it.",
+      "Pinned sites stay loaded from the moment Klar opens, so they show instantly, and closing one keeps it ready for next time, with anything playing in it paused where you left it.",
+      "Dragging a tab onto your pinned sites shrinks it into the pinned icon itâs about to become, and dragging a pinned site out turns it back into a tab.",
+      "In dark mode, the Graphite space color gives the sidebar a deeper charcoal."
+    ],
+    "fixes": [
+      "Silent background videos on websites play again in tabs reopened from your last session.",
+      "Pages a site opens in a new tab or window have Klarâs full right-click menu, and donât beep at keys they donât use.",
+      "Site shortcuts search their site from the address bar of an open tab too, and so do the suggestions listed under them.",
+      "Searches on YouTube, GitHub and other sites show what you searched for in new tab suggestions.",
+      "Opening a link to a large download no longer makes Klar stop responding.",
+      "The pageâs loading bar stays out of sight at the bottom of the page when you turn Inset web pages on or off.",
+      "Clicking outside a folder or tab youâre renaming in the sidebar finishes renaming it.",
+      "While the sidebar closes or the window gets wider, the pageâs color reaches all the way to its edge."
+    ]
+  },
+  {
+    "version": "1.3.1",
+    "new": [
+      {
+        "symbol": "hand.raised",
+        "title": "Website settings",
+        "detail": "Click the gear in the address bar to see how secure a siteâs connection is and view its certificate, choose whether it may use your camera, microphone and location, change its zoom, or clear its cookies and data."
+      },
+      {
+        "symbol": "hand.draw",
+        "title": "Swipe between spaces",
+        "detail": "Swipe sideways with two fingers on the sidebar to move between your spaces and the overview, with the next space sliding in as you go; pinching to the overview now follows your fingers too."
+      },
+      {
+        "symbol": "square.and.arrow.down",
+        "title": "Import from Arc",
+        "detail": "Bring your Arc spaces, pinned tabs, folders and favorites into Klar from Settings âº Spaces."
+      }
+    ],
+    "improvements": [
+      "Klar remembers whether each website may use your camera, microphone and location, on all your Macs with iCloud sync.",
+      "The update window no longer lists whatâs new. Youâll see that in Whatâs New once the update is installed, instead of reading it twice.",
+      "Downloads, Reading List and History look and feel like your tabs: rows light up under the pointer, what you open stays highlighted while you stay in the list, and every item has a menu when you Control-click it. Double-click a download to open it, and show only whatâs left to read in the Reading List.",
+      "Clicking your current space from Downloads, Reading List or History takes you straight back to its tabs."
+    ],
+    "fixes": [
+      "Websites can use your camera and microphone for video calls, after asking you first."
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "new": [
+      {
+        "symbol": "square.grid.2x2",
+        "title": "Spaces",
+        "detail": "Keep separate sets of tabs and folders in spaces at the bottom of the sidebar, each with its own letter, symbol, emoji or icon, its own color and, if you like, its own profile for sign-ins and history. Drag a tab onto a space to move it there."
+      },
+      {
+        "symbol": "rectangle.grid.1x2",
+        "title": "Overview",
+        "detail": "Pinch the sidebar, or click the grid button below it, to see your downloads, Reading List, history and spaces at once; open anything and youâre back in your space."
+      },
+      {
+        "symbol": "pin",
+        "title": "Pinned sites",
+        "detail": "Keep the sites you use most as icons at the top of the sidebar, the same in every space: drag a tab or a link there to pin it."
+      }
+    ],
+    "improvements": [
+      "Folders can have an emoji as their icon: the icon picker now has symbols, emoji and Klarâs own icons in one searchable list.",
+      "The live Now Playing preview in the sidebar uses much less graphics power.",
+      "Settings looks and works like System Settings, with Light, Dark and System previews to choose Klarâs appearance."
+    ],
+    "fixes": [
+      "The sidebar can no longer be made so narrow that it hides its buttons and resize handle.",
+      "Password autofill now offers your accounts on sign-in pages that put the cursor in the password box as they load.",
+      "Inset web pages no longer leaves a wider gap between the page and the sidebar than around the rest of the page.",
+      "The pageâs rounded corners are clean again, without a thin light edge along the curve, and inset pages have slightly rounder corners.",
+      "A saved tab you close while itâs playing no longer shows the speaker in the sidebar.",
+      "Signing in with a Microsoft work or school account on a Mac managed with Intune now recognizes the Mac, so company sites that require a managed device open instead of asking you to enroll it."
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "new": [
+      {
+        "symbol": "puzzlepiece.extension",
+        "title": "Extensions",
+        "detail": "Add extensions from the Chrome Web Store with Add to Klar, bring over the ones you use in Chrome, Arc, Brave or Edge, and pin their buttons to the address bar."
+      },
+      {
+        "symbol": "icloud",
+        "title": "iCloud sync",
+        "detail": "Turn on Settings âº iCloud to keep your saved tabs, folders, settings, extensions and passwords the same on every Mac."
+      },
+      {
+        "symbol": "key",
+        "title": "Passwords and autofill",
+        "detail": "Sign in with accounts and verification codes from Appleâs Passwords app, and fill in your name, email and address from your card in Contacts."
+      },
+      {
+        "symbol": "arrow.down.circle",
+        "title": "Automatic updates",
+        "detail": "Klar now updates itself in the background and shows whatâs new after each update. Check any time from Klar âº Check for Updatesâ¦."
+      },
+      {
+        "symbol": "rectangle.inset.filled",
+        "title": "Inset web pages",
+        "detail": "Turn on Settings âº Appearance âº Inset web pages to frame the page with a little of the window around it."
+      },
+      {
+        "symbol": "magnifyingglass",
+        "title": "Popular sites",
+        "detail": "Start typing a well-known siteâs address and itâs suggested right away, even if youâve never been there."
+      }
+    ],
+    "improvements": [
+      "The Now Playing preview in the sidebar shows the video live, at its full frame rate.",
+      "The pageâs colors glow softly into the sidebar, and the sidebarâs buttons lift out in Liquid Glass when you point at them.",
+      "Klar opens faster, new tabs open without a pause, and tabs in the background use less memory.",
+      "Typing goes straight to the page when Klar opens and after you close the command palette or Find."
+    ],
+    "fixes": [
+      "A page that keeps crashing shows a message instead of reloading over and over.",
+      "Keys a page doesnât use no longer make the alert sound.",
+      "Set as Default in Settings âº General makes Klar your default browser again."
+    ]
+  }
+]

@@ -1,0 +1,487 @@
+#!/bin/bash
+#
+# Builds, signs, notarizes and packages Klar as a DMG, then publishes it on GitHub as an automatic update.
+#
+#   ./ship                 Ship the current version again
+#   ./ship patch           1.2.3 → 1.2.4
+#   ./ship minor           1.2.3 → 1.3.0
+#   ./ship major           1.2.3 → 2.0.0
+#   ./ship patch --silent  Install it on people's Macs without a word: no update card, no What's New tab
+#   ./ship --no-publish    Make the DMG without sending it to people's Macs
+#   ./ship --no-notarize   Sign and package only (combine with a bump if you like)
+#   ./ship --version       Print the current version
+#
+# Notarization uses a saved keychain profile. To set one up:
+#   xcrun notarytool store-credentials "<profile>" --apple-id "<id>" --team-id C4H3XBVK2C
+#
+# Publishing needs the GitHub CLI, logged in with write access to the repository (`gh auth login`), and the
+# repository public: its releases are where Klar's updates come from, and a private one's files can't be
+# downloaded. A bump is committed and main pushed first, then the release vX.Y.Z is made with the DMG and
+# Sparkle's appcast.xml, as a draft until both are up. Klar's feed is the latest release's appcast.xml
+# (KLAR_UPDATE_FEED, set only here), so the newest release is what every copy is offered. If publishing fails
+# after the bump is pushed, `./ship` ships that version again.
+#
+# Until every copy reads its updates from GitHub, each release also goes to the old update server, which
+# Klar 1.4.0 and earlier read: see publish_old_server, which needs `npx wrangler login`.
+#
+# Updates are signed with the EdDSA key Sparkle's generate_keys keeps in the keychain; its public half
+# is SUPublicEDKey in Klar/Info.plist.
+
+set -euo pipefail
+
+export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+
+TEAM_ID="C4H3XBVK2C"
+SIGNING_IDENTITY="Developer ID Application"
+NOTARY_PROFILE="${NOTARY_PROFILE:-browser}"
+SCHEME="Klar"
+APP_NAME="Klar"
+REPO="itsnwa/klar"
+RELEASES_URL="https://github.com/$REPO/releases"
+FEED_URL="$RELEASES_URL/latest/download/appcast.xml"
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT="$ROOT/Klar.xcodeproj"
+PBXPROJ="$PROJECT/project.pbxproj"
+OUT="$ROOT/build/ship"
+SPARKLE_BIN="$ROOT/build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin"
+RELEASE_NOTES="$ROOT/Klar/ReleaseNotes.json"
+LOGS="$ROOT/build/ship-logs"
+# What a version bump changes, committed once that version has shipped.
+VERSION_FILES=(Klar.xcodeproj/project.pbxproj Klar/ReleaseNotes.json)
+
+current_version() {
+    sed -n 's/^[[:space:]]*MARKETING_VERSION = \(.*\);/\1/p' "$PBXPROJ" | head -1
+}
+
+# Prints the release notes the feed carries for a version, as HTML, or fails if that version has none. Klar's update
+# card takes the version's first new feature from them (AppUpdater.headline), by its section's data-sparkle-version.
+# Every released version up to it is included, newest first, each tagged with data-sparkle-version: Sparkle marks
+# the one that's installed, and the style hides it and everything older, so someone who skipped updates sees them all.
+# A version marked "silent" in the JSON gets data-klar-silent: Klar installs an update whose every new version has it
+# without saying so (AppUpdater.isSilent), on quit, and opens no What's New tab for it.
+# A fragment without doctype or body tags gets embedded in the feed, so it needs no file of its own.
+release_notes_html() {
+    python3 - "$RELEASE_NOTES" "$1" <<'PY'
+import html, json, sys
+def order(notes):
+    return tuple(int(part) for part in notes["version"].split("."))
+everything = json.load(open(sys.argv[1]))
+target = next((n for n in everything if n["version"] == sys.argv[2]), None)
+if target is None:
+    sys.exit(1)
+released = sorted((n for n in everything if n["version"] != "unreleased" and order(n) <= order(target)),
+                  key=order, reverse=True)
+print("""<style>
+  :root { color-scheme: light dark; }
+  body { font: 13px/1.45 -apple-system, system-ui; color: #1d1d1f; margin: 16px 20px; }
+  section + section { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(128, 128, 128, 0.3); }
+  .sparkle-installed-version, .sparkle-installed-version ~ section { display: none; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 14px; }
+  section:only-of-type > h2, section:first-of-type:has(+ .sparkle-installed-version) > h2 { display: none; }
+  h3 { font: 500 10px ui-monospace, "SF Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase;
+       color: #86868b; margin: 20px 0 8px; }
+  h3:first-of-type { margin-top: 0; }
+  ul { margin: 0; padding-left: 18px; }
+  li { margin: 4px 0; }
+  ul.new { list-style: none; padding: 0; }
+  ul.new li { margin: 0; padding: 8px 0; border-top: 1px solid rgba(128, 128, 128, 0.2); }
+  ul.new b { display: block; font-weight: 600; }
+  ul.new span { color: #86868b; }
+  @media (prefers-color-scheme: dark) { body { color: #f5f5f7; } }
+</style>""")
+for notes in released:
+    version = html.escape(notes["version"])
+    silent = " data-klar-silent" if notes.get("silent") else ""
+    print(f'<section data-sparkle-version="{version}"{silent}>\n<h2>Klar {version}</h2>')
+    if notes.get("new"):
+        print('<h3>New</h3>\n<ul class="new">')
+        for feature in notes["new"]:
+            print(f'  <li><b>{html.escape(feature["title"])}</b><span>{html.escape(feature["detail"])}</span></li>')
+        print("</ul>")
+    for key, title in (("improvements", "Improvements"), ("fixes", "Fixes")):
+        if notes.get(key):
+            print(f"<h3>{title}</h3>\n<ul>")
+            for line in notes[key]:
+                print(f"  <li>{html.escape(line)}</li>")
+            print("</ul>")
+    print("</section>")
+PY
+}
+
+# Prints a version's release notes as Markdown, for its GitHub release: only that version's, unlike the feed's.
+release_notes_markdown() {
+    python3 - "$RELEASE_NOTES" "$1" <<'PY'
+import json, sys
+notes = next((n for n in json.load(open(sys.argv[1])) if n["version"] == sys.argv[2]), None)
+if notes is None:
+    sys.exit(1)
+sections = []
+if notes.get("new"):
+    sections.append("## New\n\n" + "\n".join(f"- **{f['title']}**: {f['detail']}" for f in notes["new"]))
+for key, title in (("improvements", "Improvements"), ("fixes", "Fixes")):
+    if notes.get(key):
+        sections.append(f"## {title}\n\n" + "\n".join(f"- {line}" for line in notes[key]))
+sections.append(f"Download `Klar-{sys.argv[2]}.dmg` below, or update from **Klar › Check for Updates…**. "
+                "Klar runs on macOS 26 or later, on a Mac with Apple silicon.")
+print("\n\n".join(sections))
+PY
+}
+
+usage() {
+    sed -n '3,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    exit "${1:-0}"
+}
+
+wrangler() {
+    npx --yes wrangler@4 "$@"
+}
+
+# Output: a row per step. What the tools print goes to a log in build/ship-logs/, shown only when its step fails,
+# which also keeps out the warnings xcodebuild and Sparkle's generate_appcast print on every run.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    BOLD=$'\033[1m' DIM=$'\033[2m' RED=$'\033[31m' GREEN=$'\033[32m' YELLOW=$'\033[33m' CYAN=$'\033[36m' RESET=$'\033[0m'
+else
+    BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" RESET=""
+fi
+TAIL=12
+SPINNER=""
+
+elapsed() {
+    local seconds=$((SECONDS - $1))
+    if [ "$seconds" -lt 60 ]; then
+        echo "${seconds}s"
+    else
+        printf '%dm %02ds\n' $((seconds / 60)) $((seconds % 60))
+    fi
+}
+
+row() {
+    printf '  %s %-16s %s\n' "$1" "$2" "${DIM}${3:-}${RESET}"
+}
+ok()   { row "${GREEN}✓${RESET}" "$1" "${2:-}"; }
+warn() { row "${YELLOW}!${RESET}" "$1" "$2"; }
+skip() { row "${DIM}–${RESET}" "$1" "skipped"; }
+fail() {
+    row "${RED}✗${RESET}" "$1"
+    echo "    ${DIM}│${RESET} $2"
+    exit 1
+}
+
+spin() {
+    local frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏) i=0
+    while :; do
+        printf '\r  %s %-16s %s\033[K' "${CYAN}${frames[i++ % 10]}${RESET}" "$1" "${DIM}$(elapsed "$2")${RESET}"
+        sleep 0.1
+    done
+}
+
+stop_spinner() {
+    [ -n "$SPINNER" ] || return 0
+    kill "$SPINNER" 2>/dev/null || true
+    wait "$SPINNER" 2>/dev/null || true
+    SPINNER=""
+    printf '\r\033[K\033[?25h'
+}
+
+# Runs a command as one step: `step <name> <detail> <command…>`. The row shows the detail, or how long it took.
+# The command runs in a subshell so `set -e` holds inside functions, which means variables it sets stay there.
+step() {
+    local name="$1" detail="$2" start=$SECONDS status
+    local log="$LOGS/$(printf '%s' "$name" | tr 'A-Z ' 'a-z-').log"
+    shift 2
+    if [ -t 1 ]; then
+        printf '\033[?25l'
+        spin "$name" "$start" &
+        SPINNER=$!
+    fi
+    set +e
+    ( set -e; "$@" ) >"$log" 2>&1
+    status=$?
+    set -e
+    stop_spinner
+    if [ "$status" -eq 0 ]; then
+        ok "$name" "${detail:-$(elapsed "$start")}"
+        return
+    fi
+    row "${RED}✗${RESET}" "$name" "$(elapsed "$start")"
+    echo
+    tail -n "$TAIL" "$log" | sed "s/^/    ${DIM}│${RESET} /"
+    if [ "$(wc -l < "$log")" -gt "$TAIL" ]; then
+        echo "    ${DIM}full log: ${log#"$ROOT"/}${RESET}"
+    fi
+    echo
+    exit 1
+}
+
+# A failed ship shouldn't use up a version number, or leave the notes labelled with it.
+cleanup() {
+    stop_spinner
+    if [ -f "$PBXPROJ.ship-backup" ]; then
+        mv "$PBXPROJ.ship-backup" "$PBXPROJ"
+        echo "  ↩ Version restored to $(current_version)"
+    fi
+    if [ -f "$RELEASE_NOTES.ship-backup" ]; then
+        mv "$RELEASE_NOTES.ship-backup" "$RELEASE_NOTES"
+        echo "  ↩ Release notes are unreleased again"
+    fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+
+BUMP=""
+NOTARIZE=true
+PUBLISH=true
+SILENT=false
+for arg in "$@"; do
+    case "$arg" in
+        major|minor|patch) BUMP="$arg" ;;
+        --no-publish) PUBLISH=false ;;
+        --silent) SILENT=true ;;
+        --no-notarize) NOTARIZE=false; PUBLISH=false ;;
+        --version) current_version; exit 0 ;;
+        --help|-h) usage ;;
+        *) echo "Unknown option: $arg"; usage 1 ;;
+    esac
+done
+
+# Macs that have this version already wouldn't see it again, so it marks a new one.
+if [ "$SILENT" = true ] && [ -z "$BUMP" ]; then
+    echo "--silent ships a new version: ./ship patch --silent"
+    exit 1
+fi
+
+VERSION="$(current_version)"
+NEW_VERSION="$VERSION"
+if [ -n "$BUMP" ]; then
+    IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+    case "$BUMP" in
+        major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+        minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+        patch) PATCH=$((${PATCH:-0} + 1)) ;;
+    esac
+    NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+    echo "${BOLD}$APP_NAME${RESET}  ${DIM}$VERSION →${RESET} ${BOLD}$NEW_VERSION${RESET}"
+else
+    echo "${BOLD}$APP_NAME${RESET}  ${BOLD}$VERSION${RESET}"
+fi
+echo
+
+# Otherwise the bump's commit would sweep up whatever else is in them.
+if [ -n "$BUMP" ] && ! git -C "$ROOT" diff --quiet HEAD -- "${VERSION_FILES[@]}"; then
+    fail "Version" "Commit the changes to ${VERSION_FILES[*]} first: the new version is committed when it ships."
+fi
+
+preflight() {
+    # Config/Klar.xcconfig's signing is Klar's; a Local.xcconfig replaces it with someone else's
+    if [ -f "$ROOT/Config/Local.xcconfig" ]; then
+        echo "Config/Local.xcconfig replaces Klar's own signing. Move it away to ship."
+        return 1
+    fi
+    if ! security find-identity -v -p codesigning | grep -q "$SIGNING_IDENTITY.*($TEAM_ID)"; then
+        echo "No \"$SIGNING_IDENTITY\" certificate for team $TEAM_ID in the keychain."
+        return 1
+    fi
+    if [ "$NOTARIZE" = true ] && ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+        echo "Can't use the notarization profile \"$NOTARY_PROFILE\". See the setup note in this script."
+        return 1
+    fi
+    [ "$PUBLISH" = true ] || return 0
+    if ! gh auth status >/dev/null 2>&1; then
+        echo "Not logged in to GitHub. Run: gh auth login"
+        return 1
+    fi
+    if [ "$(gh repo view "$REPO" --json visibility --jq .visibility)" != "PUBLIC" ]; then
+        echo "$REPO is private, so its releases can't be downloaded: make it public to publish."
+        return 1
+    fi
+    # The bump goes out with main, which has to take it as it is
+    if [ "$(git -C "$ROOT" branch --show-current)" != "main" ]; then
+        echo "Releases are made from main."
+        return 1
+    fi
+    git -C "$ROOT" fetch --quiet origin main
+    if ! git -C "$ROOT" merge-base --is-ancestor origin/main HEAD; then
+        echo "origin/main has commits this main doesn't. Pull them first."
+        return 1
+    fi
+    if [[ "$(wrangler whoami 2>&1)" == *"not authenticated"* ]]; then
+        echo "Not logged in to Cloudflare, for the old update server. Run: npx wrangler login"
+        return 1
+    fi
+}
+
+rm -rf "$LOGS"
+mkdir -p "$LOGS"
+step "Checks" "" preflight
+# Who the certificate belongs to, like "Jane Doe (C4H3XBVK2C)".
+SIGNER="$(security find-identity -v -p codesigning | sed -n "s/.*\"$SIGNING_IDENTITY: \(.*($TEAM_ID)\)\"/\1/p" | head -1)"
+
+if [ -n "$BUMP" ]; then
+    cp "$PBXPROJ" "$PBXPROJ.ship-backup"
+    sed -i '' -E "s/(MARKETING_VERSION = ).*;/\1$NEW_VERSION;/; s/(CURRENT_PROJECT_VERSION = ).*;/\1$NEW_VERSION;/" "$PBXPROJ"
+    VERSION="$NEW_VERSION"
+fi
+
+# Notes are written under "unreleased" while the app is built, and get the version number when it's cut.
+# They go into the app for What's New, so this happens before it's built.
+NOTES="$VERSION"
+if [ -n "$BUMP" ] && ! release_notes_html "$VERSION" >/dev/null && grep -q '"version": "unreleased"' "$RELEASE_NOTES"; then
+    cp "$RELEASE_NOTES" "$RELEASE_NOTES.ship-backup"
+    sed -i '' "s/\"version\": \"unreleased\"/\"version\": \"$VERSION\"/" "$RELEASE_NOTES"
+    NOTES="unreleased → $VERSION"
+fi
+# --silent marks the version's notes "silent", committed with the bump.
+if [ "$SILENT" = true ] && release_notes_html "$VERSION" >/dev/null \
+    && ! release_notes_html "$VERSION" | grep -q "data-sparkle-version=\"$VERSION\" data-klar-silent"; then
+    [ -f "$RELEASE_NOTES.ship-backup" ] || cp "$RELEASE_NOTES" "$RELEASE_NOTES.ship-backup"
+    VERSION="$VERSION" perl -pi -e 's/^(\s*)"version": "\Q$ENV{VERSION}\E"(,?)$/$1"version": "$ENV{VERSION}",\n$1"silent": true$2/' "$RELEASE_NOTES"
+fi
+if release_notes_html "$VERSION" >/dev/null; then
+    if release_notes_html "$VERSION" | grep -q "data-sparkle-version=\"$VERSION\" data-klar-silent"; then
+        NOTES="$NOTES, silent"
+    fi
+    ok "Release notes" "$NOTES"
+elif [ "$PUBLISH" = true ] && [ -n "$BUMP" ]; then
+    fail "Release notes" "None for $VERSION. Add an \"unreleased\" entry to Klar/ReleaseNotes.json."
+else
+    warn "Release notes" "none for $VERSION"
+fi
+
+cd "$ROOT"
+ARCHIVE="$OUT/$APP_NAME.xcarchive"
+APP="$OUT/export/$APP_NAME.app"
+DMG="$OUT/$APP_NAME-$VERSION.dmg"
+
+# Signed automatically: the iCloud and web browser entitlements need a provisioning profile,
+# which Xcode fetches for the Developer ID certificate on export.
+archive() {
+    xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+        -archivePath "$ARCHIVE" -destination "generic/platform=macOS" \
+        -derivedDataPath "$ROOT/build/DerivedData" -allowProvisioningUpdates -quiet \
+        DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic KLAR_UPDATE_FEED="$FEED_URL"
+}
+
+sign() {
+    cat > "$OUT/export-options.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key><string>developer-id</string>
+    <key>signingStyle</key><string>automatic</string>
+    <key>signingCertificate</key><string>$SIGNING_IDENTITY</string>
+    <key>teamID</key><string>$TEAM_ID</string>
+    <key>destination</key><string>export</string>
+    <key>iCloudContainerEnvironment</key><string>Production</string>
+</dict>
+</plist>
+PLIST
+    xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$OUT/export" \
+        -exportOptionsPlist "$OUT/export-options.plist" -allowProvisioningUpdates -quiet
+    codesign --verify --deep --strict "$APP"
+
+    # Without the feed this version could never update itself again.
+    if [ "$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$APP/Contents/Info.plist")" != "$FEED_URL" ]; then
+        echo "The build is missing its update feed."
+        return 1
+    fi
+}
+
+make_dmg() {
+    local stage="$OUT/dmg"
+    mkdir -p "$stage"
+    ditto "$APP" "$stage/$APP_NAME.app"
+    ln -s /Applications "$stage/Applications"
+    hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$stage" -ov -format UDZO "$DMG"
+    codesign --sign "$SIGNING_IDENTITY" --timestamp "$DMG"
+    rm -rf "$stage"
+}
+
+notarize() {
+    local submission status
+    submission="$(xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait --output-format plist)"
+    status="$(/usr/libexec/PlistBuddy -c 'Print :status' /dev/stdin <<< "$submission")"
+    if [ "$status" != "Accepted" ]; then
+        xcrun notarytool log "$(/usr/libexec/PlistBuddy -c 'Print :id' /dev/stdin <<< "$submission")" \
+            --keychain-profile "$NOTARY_PROFILE" || true
+        echo "Notarization result: $status"
+        return 1
+    fi
+    xcrun stapler staple -q "$DMG"
+    xcrun stapler validate -q "$DMG"
+    spctl --assess --type open --context context:primary-signature "$DMG"
+}
+
+publish() {
+    # Signed with another key, the update would be turned down by every copy of Klar out there.
+    local key
+    key="$("$SPARKLE_BIN/generate_keys" -p)"
+    if [ "$key" != "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")" ]; then
+        echo "The keychain's update signing key isn't the one in Klar/Info.plist (SUPublicEDKey)."
+        return 1
+    fi
+
+    local tag="v$VERSION" feed="$OUT/feed-github"
+    make_feed "$RELEASES_URL/download/$tag/" "$feed"
+    release_notes_markdown "$VERSION" > "$OUT/release-notes.md" || echo "Klar $VERSION" > "$OUT/release-notes.md"
+    if gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
+        # Shipped again: the same release, its files replaced
+        gh release upload "$tag" "$DMG" "$feed/appcast.xml" --repo "$REPO" --clobber
+    else
+        # A draft until both files are up, so nobody is offered a DMG that hasn't arrived yet
+        gh release create "$tag" "$DMG" "$feed/appcast.xml" --repo "$REPO" --draft \
+            --target "$(git -C "$ROOT" rev-parse HEAD)" --title "Klar $VERSION" --notes-file "$OUT/release-notes.md"
+        gh release edit "$tag" --repo "$REPO" --draft=false --latest
+    fi
+}
+
+# Sparkle's feed for the DMG, downloaded from `prefix`, as appcast.xml in the folder `feed`.
+make_feed() {
+    local prefix="$1" feed="$2"
+    mkdir -p "$feed"
+    cp "$DMG" "$feed/"
+    # generate_appcast picks up notes named after the DMG.
+    release_notes_html "$VERSION" > "$feed/$(basename "$DMG" .dmg).html"
+    "$SPARKLE_BIN/generate_appcast" --embed-release-notes --download-url-prefix "$prefix" -o "$feed/appcast.xml" "$feed"
+}
+
+# The old update server (the `app-updates` Cloudflare worker, serving the `klar` folder of its R2 bucket to
+# copies with Klar's old token), which Klar 1.4.0 and earlier read. Each release goes there too, so those copies
+# update to one that reads GitHub. Remove this, its step and the wrangler check once none are left.
+publish_old_server() {
+    local feed="$OUT/feed-old-server"
+    make_feed "https://updates.itsnwa.com/klar/" "$feed"
+    # The feed goes last, so nobody is offered a DMG that hasn't arrived yet.
+    wrangler r2 object put "app-updates/klar/$(basename "$DMG")" --file "$DMG" --remote
+    wrangler r2 object put "app-updates/klar/appcast.xml" --file "$feed/appcast.xml" --remote
+}
+
+rm -rf "$OUT"
+mkdir -p "$OUT"
+step "Archive" "" archive
+step "Sign" "$SIGNER" sign
+step "DMG" "$(basename "$DMG")" make_dmg
+if [ "$NOTARIZE" = true ]; then step "Notarize" "" notarize; else skip "Notarize"; fi
+
+# The new version is kept now, so the next ship starts from it: committed, and the release made from that commit.
+rm -f "$PBXPROJ.ship-backup" "$RELEASE_NOTES.ship-backup"
+if [ -n "$BUMP" ]; then
+    step "Commit" "Bump version to $VERSION" \
+        git -C "$ROOT" commit --quiet -m "Bump version to $VERSION" -- "${VERSION_FILES[@]}"
+fi
+if [ "$PUBLISH" = true ]; then
+    step "Push" "origin main" git -C "$ROOT" push --quiet origin HEAD:main
+    step "Publish" "${RELEASES_URL#https://}/tag/v$VERSION" publish
+    step "Old server" "updates.itsnwa.com" publish_old_server
+else
+    skip "Publish"
+fi
+
+echo
+if [ "$PUBLISH" = true ]; then
+    echo "${GREEN}${BOLD}Shipped $VERSION${RESET} ${DIM}in $(elapsed 0)${RESET}"
+else
+    echo "${GREEN}${BOLD}Built $VERSION${RESET} ${DIM}in $(elapsed 0)${RESET}"
+fi
+echo "${DIM}${DMG#"$ROOT"/}${RESET}"
