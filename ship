@@ -353,7 +353,7 @@ ARCHIVE="$OUT/$APP_NAME.xcarchive"
 APP="$OUT/export/$APP_NAME.app"
 DMG="$OUT/$APP_NAME-$VERSION.dmg"
 
-# Signed automatically: the iCloud and web browser entitlements need a provisioning profile,
+# Signed automatically: the iCloud and passkey entitlements need a provisioning profile,
 # which Xcode fetches for the Developer ID certificate on export.
 archive() {
     xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
