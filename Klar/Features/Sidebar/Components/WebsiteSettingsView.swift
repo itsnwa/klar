@@ -3,8 +3,8 @@ import WebKit
 import SecurityInterface
 
 /// The gear at the end of the URL bar: the active page's connection and
-/// certificate, its permissions (SitePermissionsManager), zoom and website
-/// data.
+/// certificate, its permissions (SitePermissionsManager), its trackers
+/// (TrackerBlocker), zoom and website data.
 struct WebsiteSettingsView: View {
     @EnvironmentObject var tabManager: TabManager
     @Environment(SidebarStateManager.self) private var sidebarStateManager
@@ -55,6 +55,8 @@ private struct WebsiteSettingsPanel: View {
     @ObservedObject var tab: BrowserTab
     @StateObject private var model: WebsiteSettingsModel
     @ObservedObject private var permissions = SitePermissionsManager.shared
+    @ObservedObject private var settings = TOMLSettingsManager.shared
+    @ObservedObject private var trackers = TrackerBlocker.shared
     @Environment(\.dismiss) private var dismiss
 
     init(tab: BrowserTab, tabManager: TabManager) {
@@ -87,6 +89,10 @@ private struct WebsiteSettingsPanel: View {
 
             if model.isWebPage, model.hasWebView {
                 PanelGroup {
+                    if settings.blockTrackers, let host = model.host {
+                        trackersRow(host: host)
+                        Divider().padding(.leading, 36)
+                    }
                     PanelRow(symbol: "plus.magnifyingglass", title: "Zoom") {
                         ControlGroup {
                             Button { model.zoomOut() } label: {
@@ -217,6 +223,32 @@ private struct WebsiteSettingsPanel: View {
         }
     }
 
+    // MARK: Trackers
+
+    /// On while the site's trackers are blocked, with how many the page
+    /// tried to load (their hosts in the tooltip).
+    private func trackersRow(host: String) -> some View {
+        let blocks = !trackers.allowsTrackers(on: host)
+        return PanelRow(symbol: "hand.raised", title: "Block trackers") {
+            HStack(spacing: 8) {
+                if blocks, !model.blockedTrackers.isEmpty {
+                    Text("\(model.blockedTrackers.count) blocked")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .help(model.blockedTrackers.sorted().joined(separator: "\n"))
+                }
+                Toggle("Block trackers", isOn: Binding(
+                    get: { blocks },
+                    set: { model.setBlocksTrackers($0) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+            }
+        }
+    }
+
     // MARK: Permissions
 
     private func permissionRow(_ permission: SitePermission, host: String) -> some View {
@@ -336,11 +368,14 @@ private final class WebsiteSettingsModel: ObservableObject {
     @Published private(set) var isCameraInUse = false
     @Published private(set) var isMicrophoneInUse = false
     @Published private(set) var zoom: CGFloat = 1
+    /// The hosts the page's trackers were blocked from.
+    @Published private(set) var blockedTrackers: Set<String> = []
 
     private let tab: BrowserTab
     private let tabManager: TabManager
     private weak var webView: WKWebView?
     private var observations: [NSKeyValueObservation] = []
+    private var trackersObserver: (any NSObjectProtocol)?
 
     init(tab: BrowserTab, tabManager: TabManager) {
         self.tab = tab
@@ -359,6 +394,15 @@ private final class WebsiteSettingsModel: ObservableObject {
             webView.observe(\.cameraCaptureState) { view, _ in changed(view) },
             webView.observe(\.microphoneCaptureState) { view, _ in changed(view) }
         ]
+        trackersObserver = NotificationCenter.default.addMainObserver(forName: .trackersBlockedDidChange, object: webView) { [weak self] _ in
+            self?.refresh()
+        }
+    }
+
+    isolated deinit {
+        if let trackersObserver {
+            NotificationCenter.default.removeObserver(trackersObserver)
+        }
     }
 
     private var url: URL? {
@@ -414,6 +458,7 @@ private final class WebsiteSettingsModel: ObservableObject {
         setIfChanged(\.isCameraInUse, (webView?.cameraCaptureState ?? .none) != .none)
         setIfChanged(\.isMicrophoneInUse, (webView?.microphoneCaptureState ?? .none) != .none)
         setIfChanged(\.zoom, webView?.pageZoom ?? 1)
+        setIfChanged(\.blockedTrackers, TabWebViewCoordinator.coordinator(for: tab.id)?.blockedTrackerHosts ?? [])
     }
 
     private func setIfChanged<Value: Equatable>(_ keyPath: ReferenceWritableKeyPath<WebsiteSettingsModel, Value>, _ value: Value) {
@@ -434,6 +479,15 @@ private final class WebsiteSettingsModel: ObservableObject {
         case .microphone: webView.setMicrophoneCaptureState(.none, completionHandler: nil)
         case .location: break
         }
+    }
+
+    /// Lets the site's trackers load, or blocks them again, and reloads the
+    /// page with it. Other tabs on the site follow from their next load. From
+    /// a private tab, allowing lasts for the private session.
+    func setBlocksTrackers(_ blocks: Bool) {
+        guard let host, let webView else { return }
+        TrackerBlocker.shared.setAllowsTrackers(!blocks, on: host, isPrivate: tab.isPrivate)
+        webView.reload()
     }
 
     /// The certificate chain the page was loaded with, in a sheet on the

@@ -86,6 +86,10 @@ class WebViewConfiguration {
 
         PageIconLoader.installAppearanceObserver(on: configuration)
 
+        // Known trackers don't load (TrackerBlocker; each navigation sets it
+        // for the page's site)
+        TrackerBlocker.shared.install(on: configuration)
+
         // Chrome extensions: one controller for every web view, so content
         // scripts and the extension APIs reach every page (ExtensionManager);
         // and an "Add to Klar" button on Chrome Web Store pages. Not in
@@ -442,6 +446,11 @@ class WebViewConfiguration {
                     'pointer', 'dropdown-toggle', 'nav-link', 'menu-item'
                 ];
 
+                // Controls inside an element make it a region rather than a
+                // control (a control can't hold another).
+                const CONTROL_SELECTOR =
+                    'a[href], button, input, select, textarea, [tabindex]:not([tabindex^="-"])';
+
                 // `elements` is the click's path, from the element under the
                 // pointer up: it goes into open shadow roots, where sites
                 // build headers as web components (discogs.com's search
@@ -492,9 +501,14 @@ class WebViewConfiguration {
                                 return true;
                             }
 
+                            // A focusable element is a control, unless it
+                            // holds controls: then it's a region made
+                            // focusable so the keyboard can scroll it, like
+                            // github.com's content pane (`tabindex="0"`),
+                            // whose margins are the page's empty sides.
                             if (element.hasAttribute('tabindex')) {
                                 const tabindex = parseInt(element.getAttribute('tabindex'), 10);
-                                if (tabindex >= 0) return true;
+                                if (tabindex >= 0 && !element.querySelector(CONTROL_SELECTOR)) return true;
                             }
 
                             if (element.hasAttribute('data-clickable') ||

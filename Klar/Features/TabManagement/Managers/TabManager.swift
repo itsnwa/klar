@@ -1061,8 +1061,9 @@ class TabManager: ObservableObject {
     func openCommandPaletteWithCurrentURL() {
         requestCommandPalette(newTab: false)
         
-        // Pre-fill with current tab's URL if available
-        if let currentURL = activeTab?.url, !currentURL.isEmpty, currentURL != "about:blank" {
+        // Pre-fill with current tab's URL if available (a locked private tab's stays hidden)
+        if let tab = activeTab, !tab.isLocked, !tab.url.isEmpty, tab.url != "about:blank" {
+            let currentURL = tab.url
             // Post notification to set pre-filled URL after command palette setup
             // Use timing that coordinates with focus setup
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
@@ -1165,7 +1166,7 @@ class TabManager: ObservableObject {
     // MARK: - Utilities
     
     func copyCurrentTabURL() {
-        guard let activeTab = activeTab else { return }
+        guard let activeTab = activeTab, !activeTab.isLocked else { return }
         
         let result = URLUtilities.removeTrackingParameters(from: activeTab.url)
         

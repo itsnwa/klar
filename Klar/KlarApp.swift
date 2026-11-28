@@ -501,6 +501,14 @@ struct KlarApp: App {
         Onboarding.recordLaunch()
         WhatsNew.shared.recordLaunch()
 
+        // The trackers' list, looked up (or compiled, after an update) while
+        // the windows open; a page that comes first waits for it
+        TrackerBlocker.shared.start()
+
+        // Private tabs lock when the Mac locks or sleeps, or Klar has been
+        // in the background a while
+        PrivateTabLock.shared.start()
+
         // The windows open at quit, each with its tabs, before any window
         // or web view needs them. They open once the first window is up.
         BrowserWindowSession.restoreAll()
@@ -631,6 +639,11 @@ struct KlarApp: App {
                 BrowserWindow.perform { $0.tabManager.openCommandPaletteForNewTab(isPrivate: true) }
               }
               .keyboardShortcut("t", modifiers: [.command, .shift])
+
+              // Every window's, until Touch ID or the password unlocks them
+              Button("Lock Private Tabs") {
+                PrivateTabLock.shared.lock()
+              }
 
               Button("Tab Actions...") {
                 BrowserWindow.perform { $0.tabManager.openCommandPaletteForTabActions() }

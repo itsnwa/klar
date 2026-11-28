@@ -26,6 +26,13 @@ enum AppearanceMode: String, CaseIterable {
     case system = "System"
 }
 
+/// Settings › General › Privacy: which tabs get all of Safari's Advanced Tracking and Fingerprinting Protection
+/// (`TrackerBlocker.setProtections`), as Safari's "in Private Browsing" and "in all browsing".
+enum FingerprintingProtection: String, CaseIterable {
+    case privateTabs = "In private tabs"
+    case allTabs = "In all tabs"
+}
+
 /// Settings › General › Privacy: how long history is kept, and the default.
 enum HistoryRetention: String, CaseIterable {
     case oneDay = "After one day"

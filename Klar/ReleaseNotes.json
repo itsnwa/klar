@@ -1,5 +1,11 @@
 [
   {
+    "version": "unreleased",
+    "improvements": [
+      "A group’s icon is quieter: its favicons and icon sit a little smaller in a box edged with a fine line of light."
+    ]
+  },
+  {
     "version": "1.4.1",
     "silent": true,
     "improvements": [

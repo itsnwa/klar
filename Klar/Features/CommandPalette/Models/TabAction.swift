@@ -95,7 +95,8 @@ enum TabAction: Equatable, Identifiable {
 enum TabActionsBuilder {
     static func actions(for activeTab: BrowserTab?, sidebarManager: SidebarManager?) -> [TabAction] {
         let hasUsableTab: Bool = {
-            guard let activeTab = activeTab else { return false }
+            // A locked private tab's page isn't to be copied, saved or moved
+            guard let activeTab = activeTab, !activeTab.isLocked else { return false }
             return !activeTab.url.isEmpty && activeTab.url != "about:blank"
         }()
 

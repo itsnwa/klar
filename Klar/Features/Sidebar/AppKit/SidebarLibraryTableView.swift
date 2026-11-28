@@ -292,15 +292,20 @@ struct SidebarLibraryHighlight {
 extension TabManager {
     typealias ActiveTabURL = (tabID: UUID?, url: String)
 
-    /// The active tab and its address, as either changes.
+    /// The active tab and its address, as either changes. A locked private
+    /// tab's is none (PrivateTabLock): no history row lights up for it.
     var activeTabURLPublisher: AnyPublisher<ActiveTabURL, Never> {
         $activeTabId
             .map { [weak self] id -> AnyPublisher<ActiveTabURL, Never> in
                 guard let id, let tab = self?.tabs.first(where: { $0.id == id }) else {
                     return Just<ActiveTabURL>((tabID: nil, url: "")).eraseToAnyPublisher()
                 }
+                let lockChanges = NotificationCenter.default.publisher(for: .privateTabsLockDidChange)
+                    .map { _ in () }
+                    .prepend(())
                 return tab.$url
-                    .map { url -> ActiveTabURL in (tabID: id, url: url) }
+                    .combineLatest(lockChanges)
+                    .map { [weak tab] url, _ -> ActiveTabURL in (tabID: id, url: tab?.isLocked == true ? "" : url) }
                     .eraseToAnyPublisher()
             }
             .switchToLatest()

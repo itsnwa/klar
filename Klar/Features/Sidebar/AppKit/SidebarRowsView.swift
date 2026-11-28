@@ -1501,10 +1501,12 @@ final class SidebarRowsView: NSView {
     private func configureRegularTabCell(_ cell: SidebarTabRowView, browserTabID: UUID, depth: Int) {
         guard let manager = sidebarManager, let tabManager = tabManager,
               let browserTab = regularTabsByID[browserTabID] else { return }
+        // A locked private tab shows nothing of its page (PrivateTabLock)
+        let isLocked = browserTab.isLocked
         let synthetic = SidebarTab(
             id: browserTab.id,
-            title: browserTab.title,
-            url: browserTab.url,
+            title: isLocked ? "Locked" : browserTab.title,
+            url: isLocked ? "" : browserTab.url,
             createdAt: browserTab.createdAt,
             order: 0,
             isUnloaded: false
@@ -1516,7 +1518,8 @@ final class SidebarRowsView: NSView {
             isRenaming: false,
             extraLeadingInset: CGFloat(depth) * SidebarLayoutMetrics.depthIndent,
             mode: .regular,
-            isPrivate: browserTab.isPrivate
+            isPrivate: browserTab.isPrivate,
+            isLocked: isLocked
         )
         applySelection(to: cell, itemID: browserTabID,
                        activeID: previewedSpace.map { $0.selectedItemID } ?? tabManager.activeTabId)
@@ -1891,7 +1894,9 @@ final class SidebarRowsView: NSView {
     }
 
     private func beginItemDrag(for key: SidebarRowKey, with event: NSEvent) {
-        guard let id = draggedID(for: key), let view = rowViewsByKey[key] else { return }
+        // A locked private tab stays put: its drag would carry its page's link
+        guard let id = draggedID(for: key), let view = rowViewsByKey[key],
+              regularTabsByID[id]?.isLocked != true else { return }
 
         isDraggingItem = true
         // Suppress the deferred folder-toggle and any pending press state.

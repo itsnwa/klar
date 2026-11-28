@@ -145,6 +145,15 @@ final class SidebarTabsViewController: NSViewController {
             }
             .store(in: &cancellables)
 
+        // The private tabs locked or unlocked: their rows hide their pages'
+        // titles and icons, or show them again
+        NotificationCenter.default.publisher(for: .privateTabsLockDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.rowsView.setNeedsReload()
+            }
+            .store(in: &cancellables)
+
         // A regular tab joined or left a group, or one was renamed, here or
         // in another window or on another Mac
         NotificationCenter.default.publisher(for: .openTabGroupsDidChange)

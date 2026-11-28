@@ -582,8 +582,9 @@ class CommandPaletteState: ObservableObject {
         entries.reserveCapacity(indexedTabs.count)
         var listedIDs: Set<UUID> = []
 
-        // Open tabs, saved or not: a saved tab's page maps to it
-        for browserTab in tabManager.tabs where !browserTab.isEmpty {
+        // Open tabs, saved or not: a saved tab's page maps to it. Not a
+        // locked private tab: nothing of it shows (PrivateTabLock)
+        for browserTab in tabManager.tabs where !browserTab.isEmpty && !browserTab.isLocked {
             let sidebarTab = browserToSidebar[browserTab.id].flatMap { structure?.tabs[$0] }
             entries.append(makeEntry(
                 id: browserTab.id,

@@ -81,6 +81,26 @@ struct GeneralSettingsView: View {
             }
 
             Section("Privacy") {
+                Toggle(isOn: $settingsManager.blockTrackers) {
+                    Text("Block trackers")
+                    Text("Known trackers don’t load, and links lose their tracking parameters. To allow a site’s trackers, use the gear in its address bar")
+                }
+
+                Picker(selection: $settingsManager.fingerprintingProtection) {
+                    ForEach(FingerprintingProtection.allCases, id: \.self) { protection in
+                        Text(protection.rawValue).tag(protection)
+                    }
+                } label: {
+                    Text("Fingerprinting protection")
+                    Text("Safari’s protection: sites can’t tell your Mac apart by how it draws, plays audio or sizes its screen. If a site doesn’t work right, allow its trackers with the gear in its address bar")
+                }
+                .disabled(!settingsManager.blockTrackers)
+
+                Toggle(isOn: $settingsManager.lockPrivateTabs) {
+                    Text("Lock private tabs when you’re away")
+                    Text("When your Mac locks or sleeps, or Klar has been in the background for 5 minutes, private tabs hide until you unlock them with Touch ID or your password")
+                }
+
                 Picker(selection: $settingsManager.historyRetention) {
                     ForEach(HistoryRetention.allCases, id: \.self) { retention in
                         Text(retention.rawValue).tag(retention)

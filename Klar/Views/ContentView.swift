@@ -173,9 +173,10 @@ struct BrowserContentArea: View {
         let showsEmptyState = tabManager.activeTabId == nil
             || !tabManager.tabs.contains(where: { !$0.isEmpty })
         let splitViews = tabManager.splitViews
+        // A locked private tab has the lock screen's, not its page's
         let pageColor = splitViews.shownSplitID != nil || splitViews.isMovingPanes
             ? Color.clear
-            : showsEmptyState
+            : showsEmptyState || tabManager.activeTab?.isLocked == true
                 ? EmptyStateView.backgroundColor
                 : tabManager.activeTab?.backgroundColor ?? EmptyStateView.backgroundColor
         BrowserView(isSidebarFloating: sidebarStateManager.isFloating)

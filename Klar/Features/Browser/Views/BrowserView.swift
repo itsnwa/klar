@@ -65,7 +65,7 @@ struct BrowserView: View {
             VStack {
                 Spacer()
                 HStack {
-                    if let activeTab = activeTab {
+                    if let activeTab = activeTab, !activeTab.isLocked {
                         ActiveTabProgressBar(tab: activeTab)
                             .padding(EdgeInsets(top: 0, leading: 8, bottom: -16, trailing: 0))
                             .id(activeTab.id)
@@ -75,8 +75,11 @@ struct BrowserView: View {
             }
             .zIndex(1000)
             
-            FindPanelOverlay()
-                .zIndex(2000)
+            // A locked private tab's find and chat stay hidden with its page
+            if activeTab?.isLocked != true {
+                FindPanelOverlay()
+                    .zIndex(2000)
+            }
         }
         .onAppear {
             // On the next turn, once the window has been drawn.

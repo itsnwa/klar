@@ -52,6 +52,11 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
     /// Tells an answer to the latest suspend check from a stale one.
     private var suspendCheckGeneration = 0
 
+    /// The hosts TrackerBlocker's lists kept the page from loading anything
+    /// from, since it was committed: the site's settings popover counts them
+    /// (`.trackersBlockedDidChange` as one's added).
+    private(set) var blockedTrackerHosts: Set<String> = []
+
     /// Web views whose page reported that the user typed into something the
     /// suspend-time form check can't see — a rich-text editor, or any field
     /// in a frame (the `userEdited` message). Kept per web view rather than
@@ -512,8 +517,9 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { return }
                 
-                // Final cleanup check before accessing WebView
-                guard !self.isCleanedUp else { return }
+                // Final cleanup check before accessing WebView; a locked
+                // private tab's hidden page takes no keystrokes
+                guard !self.isCleanedUp, !self.tab.isLocked else { return }
                 
                 if let window = self.webView.window {
                     window.makeFirstResponder(self.webView)
@@ -522,7 +528,7 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
                         guard let self = self else { return }
                         
                         // Final cleanup check
-                        guard !self.isCleanedUp else { return }
+                        guard !self.isCleanedUp, !self.tab.isLocked else { return }
                         
                         self.webView.window?.makeFirstResponder(self.webView)
                     }
@@ -919,8 +925,20 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
     }
     
     // MARK: - WKNavigationDelegate
-    
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
+
+    /// The variant with the page's preferences, which carry Safari's tracking
+    /// protections for it (TrackerBlocker: a private tab's are Private
+    /// Browsing's); WebKit asks this one instead of the one without.
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, preferences: WKWebpagePreferences, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy, WKWebpagePreferences) -> Void) {
+        if navigationAction.targetFrame?.isMainFrame == true {
+            TrackerBlocker.shared.setProtections(on: preferences, for: navigationAction.request.url, isPrivate: tab.isPrivate)
+        }
+        decidePolicy(webView, for: navigationAction) { policy in
+            decisionHandler(policy, preferences)
+        }
+    }
+
+    private func decidePolicy(_ webView: WKWebView, for navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
         let url = navigationAction.request.url?.absoluteString ?? "unknown"
         
         // Handle blob URL downloads - these need special handling via JavaScript.
@@ -1055,6 +1073,15 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
             return
         }
 
+        // Trackers blocked or not for the page's site, from this load on. A
+        // popup's controller is its opener's, which it follows.
+        if navigationAction.targetFrame?.isMainFrame == true, !isAdoptedWebView {
+            TrackerBlocker.shared.prepare(webView, for: navigationAction.request.url) {
+                decisionHandler(.allow)
+            }
+            return
+        }
+
         decisionHandler(.allow)
     }
     
@@ -1125,6 +1152,13 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
             if let existingCredential = URLCredentialStorage.shared.defaultCredential(for: protectionSpace) {
                 logDebug(.webView, "Using stored credential for \(protectionSpace.host)")
                 completionHandler(.useCredential, existingCredential)
+                return
+            }
+
+            // A locked private tab's page asks nothing: the sheet would name
+            // its site (PrivateTabLock)
+            if tab.isLocked {
+                completionHandler(.cancelAuthenticationChallenge, nil)
                 return
             }
 
@@ -1283,9 +1317,26 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
         GeolocationBridge.pageDidChange(in: webView)
         MediaControlManager.shared.pageDidChange(for: tab.id)
         AutofillCoordinator.shared.dismissSuggestions(in: webView)
+        if !blockedTrackerHosts.isEmpty {
+            blockedTrackerHosts = []
+            NotificationCenter.default.post(name: .trackersBlockedDidChange, object: webView)
+        }
         // A navigation: the open tab goes along, unless it started it
         lastHistoryItem = webView.backForwardList.currentItem
         tab.didNavigate()
+    }
+
+    /// A content rule list acted on one of the page's loads: WebKit's private
+    /// `WKNavigationDelegatePrivate` method, asked for with
+    /// `respondsToSelector:` as the delegate is set. `action` is a
+    /// `_WKContentRuleListAction`.
+    @objc(_webView:contentRuleListWithIdentifier:performedAction:forURL:)
+    func webView(_ webView: WKWebView, contentRuleListWithIdentifier identifier: String, performedAction action: NSObject, forURL url: URL) {
+        guard TrackerBlocker.isTrackerList(identifier),
+              (action.value(forKey: "blockedLoad") as? Bool) == true,
+              let host = url.host?.lowercased(),
+              blockedTrackerHosts.insert(host).inserted else { return }
+        NotificationCenter.default.post(name: .trackersBlockedDidChange, object: webView)
     }
 
     /// The page's web process ended: it crashed, or the system stopped it.
@@ -1999,6 +2050,27 @@ class TabWebViewCoordinator: NSObject, ObservableObject, WKNavigationDelegate, W
     // Static method to access coordinator for a specific tab
     static func coordinator(for tabId: UUID) -> TabWebViewCoordinator? {
         allTabCoordinators[tabId]?.value
+    }
+
+    /// Block trackers, or a site allowed or blocked again: each open tab
+    /// follows for its page's site from its next load. Popups follow their
+    /// opener.
+    static func applyTrackerBlocking() {
+        for coordinator in allTabCoordinators.values.compactMap(\.value) where !coordinator.isCleanedUp && !coordinator.isAdoptedWebView {
+            TrackerBlocker.shared.apply(to: coordinator.webView, for: coordinator.webView.url)
+        }
+    }
+
+    /// The private tabs locked (PrivateTabLock): their pages leave full screen and Picture in Picture, which would
+    /// show them, and stop taking keystrokes. What plays keeps playing.
+    static func privateTabsLocked() {
+        for coordinator in allTabCoordinators.values.compactMap(\.value) where !coordinator.isCleanedUp && coordinator.tab.isPrivate {
+            let webView = coordinator.webView
+            webView.closeAllMediaPresentations(completionHandler: nil)
+            if let window = webView.window, let responder = window.firstResponder as? NSView, responder.isDescendant(of: webView) {
+                window.makeFirstResponder(nil)
+            }
+        }
     }
 
     /// Settings › General › Web developer tools, for the tabs open now. A

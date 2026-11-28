@@ -61,6 +61,8 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
     private var isCurrentlyUnloaded: Bool = false
     private var mode: SidebarTabRowMode = .organized
     private var isPrivate = false
+    /// A private tab while the private tabs are locked: "Locked" and a lock, nothing of its page
+    private var isLocked = false
 
     /// What the last `configure` applied. The rows view reconfigures every
     /// visible row on each reload, so an identical call has to cost nothing.
@@ -71,6 +73,7 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
         var isUnloaded: Bool
         var mode: SidebarTabRowMode
         var isPrivate: Bool
+        var isLocked: Bool
         var leadingInset: CGFloat
         var isRenaming: Bool
     }
@@ -221,7 +224,8 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
         isRenaming: Bool,
         extraLeadingInset: CGFloat = 0,
         mode: SidebarTabRowMode = .organized,
-        isPrivate: Bool = false
+        isPrivate: Bool = false,
+        isLocked: Bool = false
     ) {
         self.sidebarManager = sidebarManager
         self.tabManager = tabManager
@@ -241,6 +245,7 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
             isUnloaded: isUnloaded,
             mode: mode,
             isPrivate: isPrivate,
+            isLocked: isLocked,
             leadingInset: extraLeadingInset,
             isRenaming: isRenaming
         )
@@ -257,6 +262,8 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
             self.isPrivate = isPrivate
             applyPrivateIndicator()
         }
+        let lockChanged = old != nil && old?.isLocked != isLocked
+        self.isLocked = isLocked
 
         if old?.leadingInset != extraLeadingInset {
             applyLeadingInset(extraLeadingInset)
@@ -319,6 +326,17 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
                 attachBrowserTabObservers(for: tab.id, tabManager: tabManager)
                 attachSavedTabTitleObserver(for: tab.id, sidebarManager: sidebarManager)
             }
+            if lockChanged {
+                // Locked: the title and icon stop following the page;
+                // unlocked, they're its own again
+                attachBrowserTabObservers(for: tab.id, tabManager: tabManager)
+                if !isLocked {
+                    faviconView.image = Symbols.globe
+                    faviconView.contentTintColor = .secondaryLabelColor
+                }
+                loadFavicon(for: tab.url)
+                lastLoadedFaviconURL = tab.url
+            }
             if mode == .organized, lastLoadedFaviconURL != tab.url {
                 // The saved tab now points somewhere else (Edit URL, update to
                 // current page): its icon may have changed too.
@@ -341,7 +359,7 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
         browserTab.$title
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newTitle in
-                guard let self = self, !self.renamingNow else { return }
+                guard let self = self, !self.renamingNow, !self.isLocked else { return }
                 let resolved = newTitle.isEmpty ? "New Tab" : newTitle
                 if self.titleField.stringValue != resolved {
                     self.titleField.stringValue = resolved
@@ -352,7 +370,7 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
         browserTab.$url
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newURL in
-                guard let self = self, !newURL.isEmpty else { return }
+                guard let self = self, !newURL.isEmpty, !self.isLocked else { return }
                 if self.lastLoadedFaviconURL == newURL { return }
                 self.lastLoadedFaviconURL = newURL
                 self.loadFavicon(for: newURL)
@@ -729,6 +747,14 @@ final class SidebarTabRowView: NSView, NSTextFieldDelegate {
     private func loadFavicon(for urlString: String) {
         faviconTask?.cancel()
         faviconTask = nil
+        // A locked private tab's row shows a lock, not its site's icon
+        if isLocked {
+            faviconObservers.forEach { NotificationCenter.default.removeObserver($0) }
+            faviconObservers = []
+            faviconView.image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Locked")
+            faviconView.contentTintColor = .secondaryLabelColor
+            return
+        }
         if let image = FaviconCacheManager.shared.cachedFavicon(for: urlString, persist: !isPrivate) {
             faviconView.image = image
             faviconView.contentTintColor = nil

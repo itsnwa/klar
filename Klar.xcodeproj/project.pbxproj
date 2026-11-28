@@ -188,6 +188,8 @@
 		B3C0A2732E61A7FB0041F1C5 /* DownloadAnimationOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C0A26F2E61A7FB0041F1C5 /* DownloadAnimationOverlay.swift */; };
 		B3C0A2752E61B6320041F1C5 /* BackgroundColorExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C0A2742E61B6320041F1C5 /* BackgroundColorExtractor.swift */; };
 		B3C12BDD2ED7A90C00809991 /* SSLBypassManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C12BDC2ED7A90C00809991 /* SSLBypassManager.swift */; };
+		D4B5DBD1F683468D81B48A39 /* TrackerBlocker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ACD7CB37B644D2BFD42BBE /* TrackerBlocker.swift */; };
+		D6628910818AE31B9F2FB8DF /* PrivateTabLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413CD91F8ABFE8256DFA04D7 /* PrivateTabLock.swift */; };
 		B3CDA001000000000000A002 /* CommandPaletteMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CDA001000000000000A001 /* CommandPaletteMode.swift */; };
 		B3CDA001000000000000A004 /* PaletteSubviewRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CDA001000000000000A003 /* PaletteSubviewRow.swift */; };
 		B3CDA001000000000000A006 /* TabAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3CDA001000000000000A005 /* TabAction.swift */; };
@@ -429,6 +431,8 @@
 		B3C0A26F2E61A7FB0041F1C5 /* DownloadAnimationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadAnimationOverlay.swift; sourceTree = "<group>"; };
 		B3C0A2742E61B6320041F1C5 /* BackgroundColorExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorExtractor.swift; sourceTree = "<group>"; };
 		B3C12BDC2ED7A90C00809991 /* SSLBypassManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSLBypassManager.swift; sourceTree = "<group>"; };
+		27ACD7CB37B644D2BFD42BBE /* TrackerBlocker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerBlocker.swift; sourceTree = "<group>"; };
+		413CD91F8ABFE8256DFA04D7 /* PrivateTabLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateTabLock.swift; sourceTree = "<group>"; };
 		B3CDA001000000000000A001 /* CommandPaletteMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteMode.swift; sourceTree = "<group>"; };
 		B3CDA001000000000000A003 /* PaletteSubviewRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteSubviewRow.swift; sourceTree = "<group>"; };
 		B3CDA001000000000000A005 /* TabAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabAction.swift; sourceTree = "<group>"; };
@@ -842,6 +846,8 @@
 				3396E779F742566A396712F2 /* FloatingSidebarBlocker.swift */,
 				B39643C62E29428200BE3E87 /* AppearanceManager.swift */,
 				B3C12BDC2ED7A90C00809991 /* SSLBypassManager.swift */,
+				27ACD7CB37B644D2BFD42BBE /* TrackerBlocker.swift */,
+				413CD91F8ABFE8256DFA04D7 /* PrivateTabLock.swift */,
 				B3FA0001000000000000FA02 /* SafariReadingListManager.swift */,
 			);
 			path = Managers;
@@ -1502,6 +1508,8 @@
 				2CB9A735A21CCC2F59161A84 /* SplitPaneControlsView.swift in Sources */,
 				B349BB912E01742D001D7C41 /* TabActivityManager.swift in Sources */,
 				B3C12BDD2ED7A90C00809991 /* SSLBypassManager.swift in Sources */,
+				D4B5DBD1F683468D81B48A39 /* TrackerBlocker.swift in Sources */,
+				D6628910818AE31B9F2FB8DF /* PrivateTabLock.swift in Sources */,
 				B35B4F4B2E792BE300C29816 /* AppearanceSettingsView.swift in Sources */,
 				B30A151F2E792BFF00C29816 /* AISettingsView.swift in Sources */,
 				B3FA0001000000000000FA01 /* SafariReadingListManager.swift in Sources */,

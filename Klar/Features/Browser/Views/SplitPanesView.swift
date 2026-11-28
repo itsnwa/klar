@@ -33,6 +33,8 @@ struct SplitPanesView: View {
         // Closing as the panes beside them take their place
         let leavingPanes = splitViews.leavingPanes
         let onScreen = shownTabIDs.union(leavingPanes.keys)
+        // Read here, so the panes follow the private tabs' lock
+        let privateTabsLocked = PrivateTabLock.shared.isLocked
 
         SplitPaneLayout(
             splits: splitViews.splits,
@@ -44,16 +46,26 @@ struct SplitPanesView: View {
             state: layoutState
         ) {
             ForEach(liveTabs(onScreen: onScreen), id: \.id) { tab in
+                let isOnScreen = tab.id == activeTabID || onScreen.contains(tab.id)
+                // A locked private tab's page is hidden (out of the window, or
+                // hidden in it while it plays), the lock screen in its place
+                let isLocked = privateTabsLocked && tab.isPrivate
+                let paneCornerRadius = splitViews.contains(tab.id) || leavingPanes[tab.id] != nil ? cornerRadius : 0
                 TabWebView(
                     tab: tab,
                     tabManager: tabManager,
-                    isVisible: tab.id == activeTabID || onScreen.contains(tab.id),
+                    isVisible: isOnScreen && !isLocked,
                     isInteractionEnabled: isInteractionEnabled,
-                    cornerRadius: splitViews.contains(tab.id) || leavingPanes[tab.id] != nil ? cornerRadius : 0,
+                    cornerRadius: paneCornerRadius,
                     showsPaneControls: shownTabIDs.contains(tab.id),
                     shouldForceArrowCursor: false
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay {
+                    if isOnScreen && isLocked {
+                        LockedPane(cornerRadius: paneCornerRadius)
+                    }
+                }
                 .layoutValue(key: SplitPaneRole.self, value: .tab(tab.id))
                 // The layout moves the panes; nothing fades over that
                 .transition(.identity)
@@ -407,6 +419,40 @@ private struct EmptyPaneContent: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(EmptyStateView.backgroundColor)
             }
+    }
+}
+
+/// A locked private tab's pane: its page stays hidden until the private
+/// tabs are unlocked (PrivateTabLock), with Touch ID or the Mac's password.
+private struct LockedPane: View {
+    let cornerRadius: CGFloat
+
+    var body: some View {
+        let lock = PrivateTabLock.shared
+        VStack(spacing: 8) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 32))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 6)
+            Text("Private tabs are locked")
+                .font(.title3.weight(.semibold))
+            Text("Unlock them with Touch ID or your password")
+                .foregroundStyle(.secondary)
+            Button("Unlock") {
+                lock.unlock()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(lock.isUnlocking)
+            .padding(.top, 10)
+        }
+        .multilineTextAlignment(.center)
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(EmptyStateView.backgroundColor)
+        }
     }
 }
 

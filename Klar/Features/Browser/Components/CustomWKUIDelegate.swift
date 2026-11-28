@@ -41,6 +41,31 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
             name: NSNotification.Name("HandleCustomContextAction"),
             object: nil
         )
+        if isPrivate {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(privateTabsLockDidChange(_:)),
+                name: .privateTabsLockDidChange,
+                object: nil
+            )
+        }
+    }
+
+    /// A private tab's while the private tabs are locked (PrivateTabLock): its popups are hidden, and what its
+    /// page asks to show (alerts, printing) isn't.
+    private var isLocked: Bool {
+        isPrivate && PrivateTabLock.shared.isLocked
+    }
+
+    /// Hides the page's popup windows while the private tabs are locked, and brings them back once unlocked.
+    @objc private func privateTabsLockDidChange(_ notification: Notification) {
+        for window in popupWindows {
+            if isLocked {
+                window.orderOut(nil)
+            } else {
+                window.orderFront(nil)
+            }
+        }
     }
     
     @objc private func handleCustomContextAction(_ notification: Notification) {
@@ -96,6 +121,11 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
     
     // MARK: - JavaScript Dialog Handling
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor () -> Void) {
+        // A locked private tab's page shows nothing: dismissed unseen
+        guard !isLocked else {
+            completionHandler()
+            return
+        }
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Alert"
@@ -115,6 +145,10 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
     }
     
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor (Bool) -> Void) {
+        guard !isLocked else {
+            completionHandler(false)
+            return
+        }
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Confirm"
@@ -135,6 +169,10 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
     }
     
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor (String?) -> Void) {
+        guard !isLocked else {
+            completionHandler(nil)
+            return
+        }
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Input Required"
@@ -492,8 +530,11 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
         popupWindow.hidesOnDeactivate = false
         
         // Don't use addChildWindow as it can cause focus issues
-        // Instead, show as an independent window
-        popupWindow.makeKeyAndOrderFront(nil)
+        // Instead, show as an independent window; a locked private tab's
+        // shows once the private tabs are unlocked
+        if !isLocked {
+            popupWindow.makeKeyAndOrderFront(nil)
+        }
         
         // Keep reference to parent for positioning but don't make it a child
         objc_setAssociatedObject(popupWindow, "parentWindow", parentWindow, .OBJC_ASSOCIATION_ASSIGN)
@@ -645,7 +686,7 @@ class CustomWKUIDelegate: NSObject, WKUIDelegate {
     /// (a `_WKFrameHandle`) or, without one, the whole page: `window.print()`
     /// and the context menu's Print items. `completion` runs once it closes.
     func runPrintPanel(for frame: AnyObject?, in webView: WKWebView, completion: @escaping @MainActor () -> Void = {}) {
-        guard let window = webView.window else {
+        guard let window = webView.window, !isLocked else {
             completion()
             return
         }

@@ -756,6 +756,15 @@ enum SidebarRegularTabContextMenuFactory {
         // needs `autoenablesItems = false` to take effect.
         menu.autoenablesItems = false
 
+        // A locked private tab: nothing that would show its page or take it
+        // elsewhere, only unlocking and closing it
+        if browserTab.isLocked {
+            SidebarContextMenuFactory.addItem(menu, title: "Unlock Private Tabs") { PrivateTabLock.shared.unlock() }
+            menu.addItem(.separator())
+            addCloseItem(to: menu, browserTab: browserTab, tabManager: tabManager)
+            return menu
+        }
+
         // In the saved tabs' sections (`buildTabMenu`)
         SidebarContextMenuFactory.addSplitItems(menu, itemID: browserTab.id, tabManager: tabManager)
         if !browserTab.isEmpty {
@@ -779,12 +788,16 @@ enum SidebarRegularTabContextMenuFactory {
 
         menu.addItem(.separator())
 
+        addCloseItem(to: menu, browserTab: browserTab, tabManager: tabManager)
+
+        return menu
+    }
+
+    private static func addCloseItem(to menu: NSMenu, browserTab: BrowserTab, tabManager: TabManager) {
         let closeItem = NSMenuItem(title: "Close Tab", action: #selector(MenuTarget.invoke), keyEquivalent: "")
         let closeTarget = MenuTarget { tabManager.closeTabUndoably(browserTab) }
         closeItem.target = closeTarget
         closeItem.representedObject = closeTarget
         menu.addItem(closeItem)
-
-        return menu
     }
 }

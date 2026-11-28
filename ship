@@ -26,6 +26,9 @@
 #
 # Updates are signed with the EdDSA key Sparkle's generate_keys keeps in the keychain; its public half
 # is SUPublicEDKey in Klar/Info.plist.
+#
+# Every ship updates the trackers Klar blocks to EasyPrivacy's latest (scripts/update_tracker_list.py), committed
+# with the version. If the list can't be downloaded or WebKit can't compile it, the one in the repository ships.
 
 set -euo pipefail
 
@@ -49,6 +52,8 @@ RELEASE_NOTES="$ROOT/Klar/ReleaseNotes.json"
 LOGS="$ROOT/build/ship-logs"
 # What a version bump changes, committed once that version has shipped.
 VERSION_FILES=(Klar.xcodeproj/project.pbxproj Klar/ReleaseNotes.json)
+# The trackers Klar blocks, written by update_tracker_list.py and committed with the version too.
+TRACKERS="Klar/Assets.xcassets/TrackerBlockList.dataset"
 
 current_version() {
     sed -n 's/^[[:space:]]*MARKETING_VERSION = \(.*\);/\1/p' "$PBXPROJ" | head -1
@@ -185,10 +190,14 @@ stop_spinner() {
 }
 
 # Runs a command as one step: `step <name> <detail> <command…>`. The row shows the detail, or how long it took.
-# The command runs in a subshell so `set -e` holds inside functions, which means variables it sets stay there.
+# The command runs in a subshell so `set -e` holds inside functions, which means variables it sets stay there;
+# what it writes to the file $STEP_DETAIL replaces the row's detail. A command that returns 75 (EX_TEMPFAIL)
+# couldn't do its part but the ship goes on: its row is a warning, with that detail.
 step() {
     local name="$1" detail="$2" start=$SECONDS status
     local log="$LOGS/$(printf '%s' "$name" | tr 'A-Z ' 'a-z-').log"
+    STEP_DETAIL="$log.detail"
+    rm -f "$STEP_DETAIL"
     shift 2
     if [ -t 1 ]; then
         printf '\033[?25l'
@@ -200,8 +209,15 @@ step() {
     status=$?
     set -e
     stop_spinner
+    if [ -s "$STEP_DETAIL" ]; then
+        detail="$(cat "$STEP_DETAIL")"
+    fi
     if [ "$status" -eq 0 ]; then
         ok "$name" "${detail:-$(elapsed "$start")}"
+        return
+    fi
+    if [ "$status" -eq 75 ]; then
+        warn "$name" "$detail (${log#"$ROOT"/})"
         return
     fi
     row "${RED}✗${RESET}" "$name" "$(elapsed "$start")"
@@ -353,6 +369,26 @@ ARCHIVE="$OUT/$APP_NAME.xcarchive"
 APP="$OUT/export/$APP_NAME.app"
 DMG="$OUT/$APP_NAME-$VERSION.dmg"
 
+# EasyPrivacy's latest, into the app being built. The row says which day's list it is, how many rules, and whether
+# it's the one already in the repository.
+update_trackers() {
+    local output version day rules
+    if ! output="$(python3 "$ROOT/scripts/update_tracker_list.py")"; then
+        echo "$output"
+        echo "couldn't update, so the last list ships" > "$STEP_DETAIL"
+        return 75
+    fi
+    echo "$output"
+    version="$(sed -n 's/^EasyPrivacy \([0-9]*\):.*/\1/p' <<< "$output")"
+    rules="$(sed -n 's/^EasyPrivacy [0-9]*: \([0-9,]*\) rules.*/\1/p' <<< "$output")"
+    day="$(date -j -f %Y%m%d "${version:0:8}" '+%-d %b %Y' 2>/dev/null || echo "$version")"
+    if [ -z "$(git -C "$ROOT" status --porcelain -- "$TRACKERS")" ]; then
+        echo "EasyPrivacy $day, $rules rules, unchanged" > "$STEP_DETAIL"
+    else
+        echo "EasyPrivacy $day, $rules rules" > "$STEP_DETAIL"
+    fi
+}
+
 # Signed automatically: the iCloud and passkey entitlements need a provisioning profile,
 # which Xcode fetches for the Developer ID certificate on export.
 archive() {
@@ -459,6 +495,7 @@ publish_old_server() {
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
+step "Trackers" "" update_trackers
 step "Archive" "" archive
 step "Sign" "$SIGNER" sign
 step "DMG" "$(basename "$DMG")" make_dmg
@@ -467,8 +504,14 @@ if [ "$NOTARIZE" = true ]; then step "Notarize" "" notarize; else skip "Notarize
 # The new version is kept now, so the next ship starts from it: committed, and the release made from that commit.
 rm -f "$PBXPROJ.ship-backup" "$RELEASE_NOTES.ship-backup"
 if [ -n "$BUMP" ]; then
+    git -C "$ROOT" add -- "$TRACKERS"
     step "Commit" "Bump version to $VERSION" \
-        git -C "$ROOT" commit --quiet -m "Bump version to $VERSION" -- "${VERSION_FILES[@]}"
+        git -C "$ROOT" commit --quiet -m "Bump version to $VERSION" -- "${VERSION_FILES[@]}" "$TRACKERS"
+elif [ "$PUBLISH" = true ] && [ -n "$(git -C "$ROOT" status --porcelain -- "$TRACKERS")" ]; then
+    # Shipped again: its list goes out with main all the same
+    git -C "$ROOT" add -- "$TRACKERS"
+    step "Commit" "Update the tracker list" \
+        git -C "$ROOT" commit --quiet -m "Update the tracker list" -- "$TRACKERS"
 fi
 if [ "$PUBLISH" = true ]; then
     step "Push" "origin main" git -C "$ROOT" push --quiet origin HEAD:main

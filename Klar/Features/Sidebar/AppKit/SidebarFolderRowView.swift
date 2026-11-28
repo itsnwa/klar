@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// A group's row: its icon (`SidebarGroupIconBox`) and its name. A saved
 /// group's, or a group of regular tabs' (configured as a `SidebarFolder` of
@@ -273,8 +274,9 @@ extension SidebarFolderRowView: SidebarHoverable {
 // MARK: - Icon
 
 /// A group's icon: a rounded rect, its corners concentric with its row's,
-/// holding the icon picked for it, or else its first tabs' favicons
-/// stacked (`SidebarGroupFavicons`), each cut out of the one behind it.
+/// edged with a hairline that shines from its top left, holding the icon
+/// picked for it, or else its first tabs' favicons stacked
+/// (`SidebarGroupFavicons`), each cut out of the one behind it.
 nonisolated enum SidebarGroupIcon {
     /// The corners of the rows it's in (`SidebarTabRowView`'s too)
     static let rowCornerRadius: CGFloat = 12
@@ -287,7 +289,32 @@ nonisolated enum SidebarGroupIcon {
     /// Its name starts where the tabs' titles do
     static let titleGap: CGFloat = 7
     /// The icon picked for it
-    static let glyphPointSize: CGFloat = 14
+    static let glyphPointSize: CGFloat = 12
+    /// A symbol's or Klar icon's color, and an emoji's opacity: quieter
+    /// than the group's name
+    static let glyphOpacity: CGFloat = 0.5
+    static let emojiOpacity: CGFloat = 0.85
+    /// A tab's favicon not there yet, in the box
+    static let placeholderPointSize: CGFloat = 10
+
+    /// The box's outline, `rect` square: its corners continuous, as a
+    /// row's are
+    static func outline(in rect: CGRect, cornerRadius: CGFloat) -> CGPath {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).path(in: rect).cgPath
+    }
+
+    /// The hairline's colors from its top left (where it shines) through
+    /// its middle (nearly gone) to its bottom right
+    static func edgeColors(isDark: Bool) -> [CGColor] {
+        if isDark {
+            return [NSColor(white: 1, alpha: 0.3).cgColor,
+                    NSColor(white: 1, alpha: 0.04).cgColor,
+                    NSColor(white: 1, alpha: 0.12).cgColor]
+        }
+        return [NSColor(white: 1, alpha: 0.9).cgColor,
+                NSColor(white: 1, alpha: 0.15).cgColor,
+                NSColor(white: 0, alpha: 0.07).cgColor]
+    }
 
     /// The icon picked for a group, at `pointSize`; nil for its favicons
     static func glyph(for icon: String, pointSize: CGFloat = glyphPointSize) -> NSImage? {
@@ -311,9 +338,9 @@ nonisolated enum SidebarGroupIcon {
         let step: CGFloat
         switch count {
         case 0: return []
-        case 1: (iconSize, step) = (14, 0)
-        case 2: (iconSize, step) = (13, 3)
-        default: (iconSize, step) = (12, 3)
+        case 1: (iconSize, step) = (12, 0)
+        case 2: (iconSize, step) = (11, 3)
+        default: (iconSize, step) = (10, 3)
         }
         let scale = side / size
         let margin = (size - iconSize - step * CGFloat(count - 1)) / 2
@@ -373,9 +400,9 @@ nonisolated enum SidebarGroupIcon {
     }
 }
 
-/// A group's icon in its row (`SidebarGroupIcon`): the rounded rect, and
-/// the icon picked for the group or its favicons, each loaded as needed
-/// and shown again as it changes.
+/// A group's icon in its row (`SidebarGroupIcon`): the rounded rect with
+/// its hairline, drawn by the box, and the icon picked for the group or its
+/// favicons, each loaded as needed and shown again as it changes.
 final class SidebarGroupIconBox: NSView {
     private let glyphView = NSImageView()
     private let stackView = NSImageView()
@@ -387,8 +414,6 @@ final class SidebarGroupIconBox: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        layer?.cornerRadius = SidebarGroupIcon.cornerRadius
-        layer?.cornerCurve = .continuous
 
         for view in [glyphView, stackView] {
             view.translatesAutoresizingMaskIntoConstraints = false
@@ -402,7 +427,7 @@ final class SidebarGroupIconBox: NSView {
                 view.bottomAnchor.constraint(equalTo: bottomAnchor)
             ])
         }
-        glyphView.contentTintColor = NSColor.labelColor.withAlphaComponent(0.8)
+        glyphView.contentTintColor = NSColor.labelColor.withAlphaComponent(SidebarGroupIcon.glyphOpacity)
     }
 
     @available(*, unavailable)
@@ -415,14 +440,41 @@ final class SidebarGroupIconBox: NSView {
 
     override var allowsVibrancy: Bool { false }
 
-    override var wantsUpdateLayer: Bool { true }
+    /// The fill, then a hairline (a pixel) just inside its edge, its
+    /// gradient running from the top left to the bottom right
+    override func draw(_ dirtyRect: NSRect) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        let radius = SidebarGroupIcon.cornerRadius
+        context.addPath(SidebarGroupIcon.outline(in: bounds, cornerRadius: radius))
+        context.setFillColor(NSColor.labelColor.withAlphaComponent(0.1).cgColor)
+        context.fillPath()
 
-    override func updateLayer() {
-        layer?.backgroundColor = NSColor.labelColor.withAlphaComponent(0.1).cgColor
+        let hairline = convertFromBacking(NSSize(width: 1, height: 1)).width
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        guard let gradient = CGGradient(colorsSpace: nil,
+                                        colors: SidebarGroupIcon.edgeColors(isDark: isDark) as CFArray,
+                                        locations: [0, 0.5, 1]) else { return }
+        context.saveGState()
+        context.addPath(SidebarGroupIcon.outline(in: bounds.insetBy(dx: hairline / 2, dy: hairline / 2),
+                                                 cornerRadius: radius - hairline / 2))
+        context.setLineWidth(hairline)
+        context.replacePathWithStrokedPath()
+        context.clip()
+        // Not flipped: the top left is at the top of y
+        context.drawLinearGradient(gradient,
+                                   start: CGPoint(x: bounds.minX, y: bounds.maxY),
+                                   end: CGPoint(x: bounds.maxX, y: bounds.minY),
+                                   options: [])
+        context.restoreGState()
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
         needsDisplay = true
     }
 
@@ -434,6 +486,7 @@ final class SidebarGroupIconBox: NSView {
         self.faviconURLs = faviconURLs
         if let glyph = SidebarGroupIcon.glyph(for: icon) {
             glyphView.image = glyph
+            glyphView.alphaValue = glyph.isTemplate ? 1 : SidebarGroupIcon.emojiOpacity
             glyphView.isHidden = false
             stackView.image = nil
             stackView.isHidden = true
@@ -458,7 +511,7 @@ final class SidebarGroupIconBox: NSView {
 
     private func showFavicons() {
         let cache = FaviconCacheManager.shared
-        let placeholder = SidebarGroupIcon.placeholder(pointSize: 11)
+        let placeholder = SidebarGroupIcon.placeholder(pointSize: SidebarGroupIcon.placeholderPointSize)
         let favicons = faviconURLs.compactMap { cache.cachedFavicon(for: $0) ?? placeholder }
         stackView.image = SidebarGroupIcon.stack(favicons, side: SidebarGroupIcon.size)
     }

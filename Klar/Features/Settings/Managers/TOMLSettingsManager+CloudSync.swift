@@ -23,6 +23,11 @@ private enum SyncedSetting: String, CaseIterable {
     case neverSavePasswordSites = "never_save_password_sites"
     /// DeepLinkHandler's, one URL scheme per line.
     case alwaysOpenApps = "always_open_apps"
+    case blockTrackers = "block_trackers"
+    /// TrackerBlocker's sites whose trackers load, one host per line.
+    case trackersAllowedSites = "trackers_allowed_sites"
+    case fingerprintingProtection = "fingerprinting_protection"
+    case lockPrivateTabs = "lock_private_tabs"
 }
 
 /// Settings in iCloud (CloudSyncManager), one record per setting, so
@@ -81,6 +86,10 @@ extension TOMLSettingsManager: CloudSyncSource {
         case .fillContactDetails: return String(fillContactDetails)
         case .neverSavePasswordSites: return AutofillCoordinator.neverSaveHosts.sorted().joined(separator: "\n")
         case .alwaysOpenApps: return DeepLinkHandler.shared.alwaysOpenSchemes.sorted().joined(separator: "\n")
+        case .blockTrackers: return String(blockTrackers)
+        case .trackersAllowedSites: return TrackerBlocker.shared.allowedHosts.sorted().joined(separator: "\n")
+        case .fingerprintingProtection: return fingerprintingProtection.rawValue
+        case .lockPrivateTabs: return String(lockPrivateTabs)
         }
     }
 
@@ -121,6 +130,14 @@ extension TOMLSettingsManager: CloudSyncSource {
             AutofillCoordinator.neverSaveHosts = Self.lines(value)
         case .alwaysOpenApps:
             DeepLinkHandler.shared.alwaysOpenSchemes = Self.lines(value)
+        case .blockTrackers:
+            if let enabled = Bool(value) { blockTrackers = enabled }
+        case .trackersAllowedSites:
+            TrackerBlocker.shared.setAllowedHosts(Self.lines(value))
+        case .fingerprintingProtection:
+            if let protection = FingerprintingProtection(rawValue: value) { fingerprintingProtection = protection }
+        case .lockPrivateTabs:
+            if let enabled = Bool(value) { lockPrivateTabs = enabled }
         }
     }
 

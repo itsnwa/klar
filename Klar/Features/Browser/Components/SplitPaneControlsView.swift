@@ -159,7 +159,8 @@ final class SplitPaneControlsView: NSView, NSDraggingSource {
     /// The pane, as the tab's row: what dropping it beside another pane
     /// moves there (`TabManager.performSplitDrop`)
     private func beginDrag(with event: NSEvent) {
-        guard let tabID, let tab = tabManager?.tabs.first(where: { $0.id == tabID }) else { return }
+        // A locked private tab's pane stays put, as its row does
+        guard let tabID, let tab = tabManager?.tabs.first(where: { $0.id == tabID }), !tab.isLocked else { return }
         let item = NSPasteboardItem()
         item.setString(tabID.uuidString, forType: Self.pasteboardType)
         let dragItem = NSDraggingItem(pasteboardWriter: item)

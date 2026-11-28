@@ -464,7 +464,9 @@ struct NowPlayingWidget: View {
             .compactMap { (tabId, state) -> (BrowserTab, TabMediaState)? in
                 guard state.hasActiveMedia,
                       !tabManager.splitViews.isVisible(tabId),
-                      let tab = tabManager.tabs.first(where: { $0.id == tabId }) else { return nil }
+                      let tab = tabManager.tabs.first(where: { $0.id == tabId }),
+                      // A locked private tab's page shows nowhere (PrivateTabLock)
+                      !tab.isLocked else { return nil }
                 return (tab, state)
             }
             .sorted { lhs, rhs in

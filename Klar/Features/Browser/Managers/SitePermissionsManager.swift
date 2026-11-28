@@ -127,6 +127,13 @@ final class SitePermissionsManager: ObservableObject {
             return
         }
 
+        // A locked private tab's page can't ask: the prompt would name its
+        // site (PrivateTabLock). Refused for now, not remembered
+        if PrivateTabLock.shared.isLocked, !webView.configuration.websiteDataStore.isPersistent {
+            completion(false)
+            return
+        }
+
         let key = host + " " + unanswered.map(\.rawValue).joined(separator: ",")
         if pendingPrompts[key] != nil {
             pendingPrompts[key]?.append(completion)

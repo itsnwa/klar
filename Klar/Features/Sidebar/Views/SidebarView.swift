@@ -61,7 +61,7 @@ struct SidebarView: View {
     /// nothing loaded
     private var canReload: Bool {
         guard let activeTab = tabManager.activeTab else { return false }
-        return !activeTab.isEmpty
+        return !activeTab.isEmpty && !activeTab.isLocked
     }
     
     @ViewBuilder
@@ -94,11 +94,11 @@ struct SidebarView: View {
             // Back and forward: a joined pair, each lighting up on its own
             TitleBarButtonPair(
                 leading: .init(systemImage: "arrow.left", label: "Go Back", help: "Go Back (⌘←)",
-                               isEnabled: tabManager.activeTab?.canGoBack == true) {
+                               isEnabled: tabManager.activeTab?.canGoBack == true && tabManager.activeTab?.isLocked != true) {
                     tabManager.goBackInCurrentTab()
                 },
                 trailing: .init(systemImage: "arrow.right", label: "Go Forward", help: "Go Forward (⌘→)",
-                                isEnabled: tabManager.activeTab?.canGoForward == true) {
+                                isEnabled: tabManager.activeTab?.canGoForward == true && tabManager.activeTab?.isLocked != true) {
                     tabManager.goForwardInCurrentTab()
                 }
             )

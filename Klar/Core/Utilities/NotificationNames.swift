@@ -6,6 +6,11 @@ extension Notification.Name {
     /// A site's variant changed (object is its URL), or Klar changed appearance (object is nil).
     static let faviconAppearanceChanged = Notification.Name("FaviconAppearanceChanged")
     static let faviconRefreshRequested = Notification.Name("FaviconRefreshRequested")
+    /// A page's count of blocked trackers changed (object is its web view;
+    /// `TabWebViewCoordinator.blockedTrackerHosts`).
+    static let trackersBlockedDidChange = Notification.Name("TrackersBlockedDidChange")
+    /// The private tabs locked or unlocked (`PrivateTabLock.isLocked`), for AppKit views that show them.
+    static let privateTabsLockDidChange = Notification.Name("PrivateTabsLockDidChange")
 }
 
 extension NotificationCenter {

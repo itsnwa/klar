@@ -27,6 +27,9 @@ struct SettingsConfig: Codable {
     var fillContactDetails: Bool = false
     var syncWithICloud: Bool = false
     var historyRetention: String = HistoryRetention.oneYear.rawValue
+    var blockTrackers: Bool = true
+    var fingerprintingProtection: String = FingerprintingProtection.privateTabs.rawValue
+    var lockPrivateTabs: Bool = true
     var webDeveloperTools: Bool = false
     var featureFlags: [String: Bool] = [:]
     /// Nil until the file has a `[site_shortcuts]` section: Klar's defaults.
@@ -218,6 +221,42 @@ class TOMLSettingsManager: ObservableObject {
         }
     }
 
+    /// Settings › General › Privacy: known trackers don't load
+    /// (TrackerBlocker). Open tabs follow from their next load.
+    @Published var blockTrackers: Bool {
+        didSet {
+            guard blockTrackers != oldValue else { return }
+            Logger.shared.info(.settings, "Block trackers turned \(blockTrackers ? "on" : "off")")
+            config.blockTrackers = blockTrackers
+            saveConfig()
+            TrackerBlocker.shared.settingChanged()
+        }
+    }
+
+    /// Settings › General › Privacy: whether every tab gets the protections
+    /// private tabs have, fingerprinting protection included, while Block
+    /// trackers is on (TrackerBlocker.setProtections). Open tabs follow from
+    /// their next load.
+    @Published var fingerprintingProtection: FingerprintingProtection {
+        didSet {
+            guard fingerprintingProtection != oldValue else { return }
+            Logger.shared.info(.settings, "Fingerprinting protection changed to: \(fingerprintingProtection.rawValue)")
+            config.fingerprintingProtection = fingerprintingProtection.rawValue
+            saveConfig()
+        }
+    }
+
+    /// Settings › General › Privacy: private tabs lock while the user is
+    /// away (PrivateTabLock). Turning it off doesn't unlock them.
+    @Published var lockPrivateTabs: Bool {
+        didSet {
+            guard lockPrivateTabs != oldValue else { return }
+            Logger.shared.info(.settings, "Lock private tabs turned \(lockPrivateTabs ? "on" : "off")")
+            config.lockPrivateTabs = lockPrivateTabs
+            saveConfig()
+        }
+    }
+
     /// Settings › General › Web Developers: Inspect Element and remote
     /// inspection on every page (`WebViewConfiguration.showsDeveloperTools`,
     /// always on in Debug builds). Each Mac's own, not synced.
@@ -275,6 +314,9 @@ class TOMLSettingsManager: ObservableObject {
         self.fillContactDetails = config.fillContactDetails
         self.syncWithICloud = config.syncWithICloud
         self.historyRetention = HistoryRetention(rawValue: config.historyRetention) ?? .oneYear
+        self.blockTrackers = config.blockTrackers
+        self.fingerprintingProtection = FingerprintingProtection(rawValue: config.fingerprintingProtection) ?? .privateTabs
+        self.lockPrivateTabs = config.lockPrivateTabs
         self.webDeveloperTools = config.webDeveloperTools
 
         // Initialize appearance manager with saved setting
@@ -366,6 +408,11 @@ class TOMLSettingsManager: ObservableObject {
 
         toml += "[history]\n"
         toml += "remove_items = \(q(config.historyRetention))\n\n"
+
+        toml += "[privacy]\n"
+        toml += "block_trackers = \(config.blockTrackers)\n"
+        toml += "fingerprinting_protection = \(q(config.fingerprintingProtection))\n"
+        toml += "lock_private_tabs = \(config.lockPrivateTabs)\n\n"
 
         toml += "[feature_flags]\n"
         toml += "# WebKit feature overrides. Managed by Settings > Feature Flags.\n"
@@ -530,6 +577,12 @@ class TOMLSettingsManager: ObservableObject {
                 config.syncWithICloud = value.lowercased() == "true"
             case ("history", "remove_items"):
                 config.historyRetention = value
+            case ("privacy", "block_trackers"):
+                config.blockTrackers = value.lowercased() != "false"
+            case ("privacy", "fingerprinting_protection"):
+                config.fingerprintingProtection = value
+            case ("privacy", "lock_private_tabs"):
+                config.lockPrivateTabs = value.lowercased() != "false"
             default:
                 break
             }

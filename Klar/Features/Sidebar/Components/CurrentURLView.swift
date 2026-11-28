@@ -26,8 +26,13 @@ struct CurrentURLView: View {
         return tab.url
     }
     
+    /// A locked private tab: its address, connection and settings stay hidden, and a click unlocks
+    private var isLocked: Bool {
+        currentTab?.isLocked == true
+    }
+
     private var securityStatus: SecurityStatus {
-        guard let tab = currentTab, !tab.url.isEmpty else {
+        guard let tab = currentTab, !tab.url.isEmpty, !tab.isLocked else {
             return .none
         }
         
@@ -48,7 +53,12 @@ struct CurrentURLView: View {
             SecurityIndicatorView(status: securityStatus)
             
             // URL display
-            if let tab = currentTab, !tab.url.isEmpty && tab.url != "about:blank" {
+            if isLocked {
+              Label("Locked", systemImage: "lock.fill")
+                  .font(.system(size: 13))
+                  .foregroundColor(.secondary)
+                  .lineLimit(1)
+            } else if let tab = currentTab, !tab.url.isEmpty && tab.url != "about:blank" {
               Text(displayURL)
                   .font(.system(size: 13))
                   .foregroundColor(.secondary)
@@ -75,8 +85,8 @@ struct CurrentURLView: View {
             // Pinned extensions and the puzzle menu (only while any run)
             ExtensionActionsView(activeTabID: tabManager.activeTabId)
 
-            // Settings button (always visible when there's a tab)
-            if currentTab != nil {
+            // Settings button (always visible when there's a tab, but a locked one)
+            if currentTab != nil && !isLocked {
                 WebsiteSettingsView()
                     .opacity(isHovering ? 1.0 : 0.3)
                     .animation(.easeInOut(duration: 0.15), value: isHovering)
@@ -101,10 +111,14 @@ struct CurrentURLView: View {
             }
         }
         .onTapGesture {
-            // Open command palette with current URL pre-filled
-            tabManager.openCommandPaletteWithCurrentURL()
+            if isLocked {
+                PrivateTabLock.shared.unlock()
+            } else {
+                // Open command palette with current URL pre-filled
+                tabManager.openCommandPaletteWithCurrentURL()
+            }
         }
-        .help("Click to edit URL (⌘L)")
+        .help(isLocked ? "Unlock private tabs" : "Click to edit URL (⌘L)")
     }
 }
 

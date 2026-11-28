@@ -2,7 +2,8 @@ import AppKit
 
 /// Klar's acknowledgements as a page in a tab, `klar://acknowledgements` (`KlarSchemeHandler`), opened from About
 /// Klar (`AboutView`): Klar's copyright and license, then what it's built on, each with its license (Sparkle,
-/// Simple Icons' brand icons, Unicode's emoji data, the Chrome UX Report and Tranco for the popular sites), and a
+/// Simple Icons' brand icons, Unicode's emoji data, the Chrome UX Report and Tranco for the popular sites,
+/// EasyPrivacy for the trackers blocked), and a
 /// note on trademarks. The licenses whose text has to go with the app (the GPL, Sparkle's, Unicode's) are data
 /// assets in the asset catalog's Acknowledgements folder, each shown in a disclosure; the brand icons' credits are
 /// written there by scripts/update_brand_icons.py, and only those with a license of their own are listed. Each
@@ -27,7 +28,7 @@ enum AcknowledgementsPage {
     }
 
     static func html() -> String {
-        let sections = [klar, sparkle, brandIcons, emoji, popularSites, trademarks].compactMap { $0 }
+        let sections = [klar, sparkle, brandIcons, emoji, popularSites, trackers, trademarks].compactMap { $0 }
         return """
         <!doctype html>
         <html lang="en">
@@ -117,6 +118,15 @@ enum AcknowledgementsPage {
         \(link("https://developer.chrome.com/docs/crux", "Chrome UX Report")) by Google, licensed under \
         \(link("https://creativecommons.org/licenses/by/4.0/", "CC BY 4.0")), ranked by \
         \(link("https://tranco-list.eu", "Tranco")), with adult sites left out.</p>
+        """)
+    }
+
+    /// EasyPrivacy is under the GPL v3 or later and CC BY-SA 3.0 or later; Klar uses it under the GPL, whose text
+    /// is with Klar's.
+    private static var trackers: String {
+        section("trackers", "Trackers", """
+        <p>The trackers Klar blocks are from \(link("https://easylist.to", "EasyPrivacy")) by The EasyList authors, \
+        under the GNU General Public License v3.0, converted into WebKit’s rules for blocking content.</p>
         """)
     }
 

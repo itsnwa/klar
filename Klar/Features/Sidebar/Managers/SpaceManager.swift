@@ -305,12 +305,15 @@ final class SpaceManager: ObservableObject {
 
     /// The last private tab, in any window, has closed: its cookies, storage and cache go
     /// with the store once its web views do, and the answers its pages got
-    /// to permission prompts are forgotten.
+    /// to permission prompts are forgotten, as are the sites whose trackers
+    /// were allowed from one, and a lock on them ends.
     @MainActor
     func endPrivateSession() {
         guard privateDataStore != nil, !BrowserWindowSession.allTabs.contains(where: \.isPrivate) else { return }
         privateDataStore = nil
         SitePermissionsManager.shared.forgetPrivateDecisions()
+        TrackerBlocker.shared.forgetPrivateAllowances()
+        PrivateTabLock.shared.privateSessionEnded()
         logInfo(.general, "Ended the private browsing session")
     }
 
