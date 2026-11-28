@@ -16,6 +16,9 @@
     "improvements": [
       "Private tabs get all of Safari’s Private Browsing protections, fingerprinting protection included, and Settings › General › Privacy can give them to every tab.",
       "A group’s icon is quieter: its favicons and icon sit a little smaller in a box edged with a fine line of light."
+    ],
+    "fixes": [
+      "The empty space at the top of a page drags the window again on sites such as GitHub, where its sides didn’t."
     ]
   },
   {
