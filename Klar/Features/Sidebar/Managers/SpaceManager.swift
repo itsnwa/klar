@@ -225,6 +225,7 @@ final class SpaceManager: ObservableObject {
         if space.usesSeparateProfile, let profileID = space.profileID {
             removeProfile(profileID)
         }
+        LinkRouter.shared.spaceWasDeleted(id)
         refreshSpaces()
     }
 
@@ -233,6 +234,7 @@ final class SpaceManager: ObservableObject {
         for selection in selections {
             selection.spaceWasRekeyed(from: oldID, to: newID)
         }
+        LinkRouter.shared.spaceWasRekeyed(from: oldID, to: newID)
     }
 
     // MARK: - Moving tabs between spaces

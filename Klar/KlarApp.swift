@@ -4,7 +4,7 @@ import ApplicationServices
 
 // Custom AppDelegate to handle URL events
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private var pendingURLs: [String] = []
+    private var pendingLinks: [ExternalLink] = []
     private var isProcessingURL = false
     
     /// A browser window has been up long enough for links to open in it
@@ -223,7 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue else {
             return
         }
-        openURLs([urlString])
+        openURLs([urlString], from: LinkRouter.sourceApp(of: event))
     }
 
     /// Opens each file in a tab of its own, as links are.
@@ -238,17 +238,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                   let url = URL(dataRepresentation: data, relativeTo: nil), url.isFileURL else { return nil }
             return url.absoluteString
         }
-        openURLs(urlStrings)
+        openURLs(urlStrings, from: LinkRouter.sourceApp(of: event))
     }
 
-    private func openURLs(_ urlStrings: [String]) {
+    /// `sourceApp`: the bundle identifier of the app that sent them, read
+    /// from the event as it arrives, for the link routes (`LinkRouter`).
+    private func openURLs(_ urlStrings: [String], from sourceApp: String?) {
         guard !urlStrings.isEmpty else { return }
+        let links = urlStrings.map { ExternalLink(address: $0, sourceApp: sourceApp) }
 
         let hasBrowserWindow = BrowserWindow.current != nil
         if isWindowReady, hasBrowserWindow {
-            urlStrings.forEach { handleURL($0) }
+            links.forEach { handleURL($0) }
         } else {
-            pendingURLs.append(contentsOf: urlStrings)
+            pendingLinks.append(contentsOf: links)
             ensureWindowExists()
         }
 
@@ -284,51 +287,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// In a new tab of the browser window in front, or its own empty tab
-    func handleURL(_ urlString: String, completion: (() -> Void)? = nil) {
+    /// Where the link routes send it (`LinkRouter`): a new tab, the
+    /// window's own empty tab, or a tab already at the page.
+    func handleURL(_ link: ExternalLink, completion: (() -> Void)? = nil) {
         DispatchQueue.main.async {
-            let session = BrowserWindowSession.current
-            let tabManager = session.tabManager
-            
-            if let targetWindow = session.window {
-                targetWindow.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-                
-                // Handle the URL
-                if tabManager.tabs.isEmpty {
-                    // App just launched - create tab with the clicked URL
-                    _ = tabManager.createNewTab(url: urlString, isExternalURL: true)
-                } else {
-                    if let activeTab = tabManager.activeTab,
-                       activeTab.isEmpty {
-                        // Navigate current tab if it's empty
-                        tabManager.navigateToURL(urlString)
-                    } else {
-                        // Create new tab for the URL
-                        _ = tabManager.createNewTab(url: urlString, isExternalURL: true)
-                    }
-                }
-
-                // The link's page takes over: close the palette, which the
-                // empty start screen opens on its own and which would
-                // otherwise stay open over the page.
-                if tabManager.showCommandPalette {
-                    tabManager.showCommandPalette = false
-                    tabManager.isNewTabMode = false
-                }
-
-                // Call completion after a short delay to allow navigation to start
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    completion?()
-                }
-            } else {
+            guard LinkRouter.shared.open(link) else {
+                completion?()
+                return
+            }
+            // Call completion after a short delay to allow navigation to start
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 completion?()
             }
         }
     }
     
     func processNextURL() {
-        guard !isProcessingURL, !pendingURLs.isEmpty else { return }
+        guard !isProcessingURL, !pendingLinks.isEmpty else { return }
         
         // Don't process URLs until a window is ready
         guard isWindowReady else {
@@ -336,9 +311,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         isProcessingURL = true
-        let urlString = pendingURLs.removeFirst()
+        let link = pendingLinks.removeFirst()
         
-        handleURL(urlString) { [weak self] in
+        handleURL(link) { [weak self] in
             DispatchQueue.main.async {
                 self?.isProcessingURL = false
                 // Process next URL if any
@@ -354,7 +329,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Process all pending URLs
-        while !pendingURLs.isEmpty && !isProcessingURL {
+        while !pendingLinks.isEmpty && !isProcessingURL {
             processNextURL()
         }
     }

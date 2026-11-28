@@ -56,6 +56,8 @@ struct SettingsWindow: View {
                     AppearanceSettingsView()
                 case .spaces:
                     SpacesSettingsView()
+                case .links:
+                    LinksSettingsView()
                 case .iCloud:
                     ICloudSettingsView()
                 case .passwords:
@@ -103,6 +105,7 @@ enum SettingsCategory: String, CaseIterable {
     case search = "search"
     case appearance = "appearance"
     case spaces = "spaces"
+    case links = "links"
     case iCloud = "iCloud"
     case passwords = "passwords"
     case extensions = "extensions"
@@ -120,6 +123,8 @@ enum SettingsCategory: String, CaseIterable {
             return "Appearance"
         case .spaces:
             return "Spaces"
+        case .links:
+            return "Links"
         case .iCloud:
             return "iCloud"
         case .passwords:
@@ -145,6 +150,8 @@ enum SettingsCategory: String, CaseIterable {
             return "paintbrush"
         case .spaces:
             return "square.grid.2x2"
+        case .links:
+            return "arrow.triangle.branch"
         case .iCloud:
             return "icloud"
         case .passwords:

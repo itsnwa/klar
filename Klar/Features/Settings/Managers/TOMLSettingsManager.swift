@@ -34,6 +34,11 @@ struct SettingsConfig: Codable {
     var featureFlags: [String: Bool] = [:]
     /// Nil until the file has a `[site_shortcuts]` section: Klar's defaults.
     var siteShortcuts: [SiteShortcut]? = nil
+    /// Settings › Links, in order
+    var linkRoutes: [LinkRoute] = []
+    /// A space's ID; empty for the space in front
+    var linkDefaultSpace: String = ""
+    var reuseOpenTabsForLinks: Bool = true
 
     static func defaultConfig() -> SettingsConfig {
         let defaultDownloadPath = NSHomeDirectory() + "/Downloads"
@@ -73,6 +78,36 @@ class TOMLSettingsManager: ObservableObject {
             guard siteShortcuts != oldValue else { return }
             // Klar's own list isn't written out, so later changes to it reach this Mac
             config.siteShortcuts = siteShortcuts == SiteShortcutPreset.defaults ? nil : siteShortcuts
+            saveConfig()
+        }
+    }
+
+    /// Settings › Links: where links from other apps open, the first that
+    /// matches winning (`LinkRouter`).
+    @Published var linkRoutes: [LinkRoute] {
+        didSet {
+            guard linkRoutes != oldValue else { return }
+            config.linkRoutes = linkRoutes
+            saveConfig()
+        }
+    }
+
+    /// The space links from other apps no route matches open in; nil for
+    /// the space in front.
+    @Published var linkDefaultSpaceID: UUID? {
+        didSet {
+            guard linkDefaultSpaceID != oldValue else { return }
+            config.linkDefaultSpace = linkDefaultSpaceID?.uuidString ?? ""
+            saveConfig()
+        }
+    }
+
+    /// A link from another app whose page is already open in its space
+    /// switches to that tab instead of opening another.
+    @Published var reuseOpenTabsForLinks: Bool {
+        didSet {
+            guard reuseOpenTabsForLinks != oldValue else { return }
+            config.reuseOpenTabsForLinks = reuseOpenTabsForLinks
             saveConfig()
         }
     }
@@ -297,6 +332,9 @@ class TOMLSettingsManager: ObservableObject {
         self.defaultSearchEngine = DefaultSearchEngine(rawValue: config.defaultSearchEngine) ?? .duckduckgo
         self.customSearchEngineURL = config.customSearchEngineURL
         self.siteShortcuts = config.siteShortcuts ?? SiteShortcutPreset.defaults
+        self.linkRoutes = config.linkRoutes
+        self.linkDefaultSpaceID = UUID(uuidString: config.linkDefaultSpace)
+        self.reuseOpenTabsForLinks = config.reuseOpenTabsForLinks
         self.tabCloseAction = TabCloseAction(rawValue: config.tabCloseAction) ?? .never
         self.openLinksInGroup = config.openLinksInGroup
         self.downloadLocation = config.downloadLocation
@@ -375,6 +413,23 @@ class TOMLSettingsManager: ObservableObject {
             toml += "\n"
         }
         
+        toml += "[link_routing]\n"
+        toml += "# Links opened from other apps open in the space of the first route they match, else in\n"
+        toml += "# default_space (a space's ID; empty for the space in front). reuse_open_tabs switches to a tab\n"
+        toml += "# already at the page. A route's match is \(LinkRoute.Match.allCases.map(\.rawValue).joined(separator: ", ")),\n"
+        toml += "# app the bundle identifier of the app the link comes from (left out for any app).\n"
+        toml += "default_space = \(q(config.linkDefaultSpace))\n"
+        toml += "reuse_open_tabs = \(config.reuseOpenTabsForLinks)\n\n"
+        for route in config.linkRoutes {
+            toml += "[[link_routing.route]]\n"
+            toml += "match = \(q(route.match.rawValue))\n"
+            toml += "pattern = \(q(route.pattern))\n"
+            if let app = route.app {
+                toml += "app = \(q(app))\n"
+            }
+            toml += "space = \(q(route.spaceID.uuidString))\n\n"
+        }
+
         toml += "[tabs]\n"
         toml += "close_action = \(q(config.tabCloseAction))\n"
         toml += "open_links_in_group = \(config.openLinksInGroup)\n\n"
@@ -491,6 +546,8 @@ class TOMLSettingsManager: ObservableObject {
     private static func parseTOML(_ content: String) -> SettingsConfig? {
         var config = SettingsConfig.defaultConfig()
         var currentSection: String = ""
+        /// `[[link_routing.route]]` tables' keys and values, in order
+        var routeTables: [[String: String]] = []
 
         let lines = content.components(separatedBy: .newlines)
 
@@ -499,6 +556,16 @@ class TOMLSettingsManager: ObservableObject {
 
             // Skip comments and empty lines
             if trimmed.isEmpty || trimmed.hasPrefix("#") {
+                continue
+            }
+
+            // A table in an array (`[[link_routing.route]]`): another route
+            if trimmed.hasPrefix("[["), let close = trimmed.range(of: "]]") {
+                currentSection = trimmed[trimmed.index(trimmed.startIndex, offsetBy: 2)..<close.lowerBound]
+                    .trimmingCharacters(in: .whitespaces)
+                if currentSection == "link_routing.route" {
+                    routeTables.append([:])
+                }
                 continue
             }
 
@@ -526,6 +593,14 @@ class TOMLSettingsManager: ObservableObject {
                 continue
             }
 
+            if currentSection == "link_routing.route" {
+                // Not after `[link_routing.route]` written with single brackets
+                if !routeTables.isEmpty {
+                    routeTables[routeTables.count - 1][key] = value
+                }
+                continue
+            }
+
             if currentSection == "feature_flags" {
                 let lowered = value.lowercased()
                 if lowered == "true" {
@@ -543,6 +618,10 @@ class TOMLSettingsManager: ObservableObject {
                 config.customSearchEngineURL = value
             case ("general", "web_developer_tools"):
                 config.webDeveloperTools = value.lowercased() == "true"
+            case ("link_routing", "default_space"):
+                config.linkDefaultSpace = value
+            case ("link_routing", "reuse_open_tabs"):
+                config.reuseOpenTabsForLinks = value.lowercased() != "false"
             case ("tabs", "close_action"):
                 config.tabCloseAction = value
             case ("tabs", "open_links_in_group"):
@@ -586,6 +665,14 @@ class TOMLSettingsManager: ObservableObject {
             default:
                 break
             }
+        }
+
+        config.linkRoutes = routeTables.compactMap { table -> LinkRoute? in
+            guard let match = LinkRoute.Match(rawValue: table["match"] ?? LinkRoute.Match.domain.rawValue),
+                  let spaceID = table["space"].flatMap(UUID.init(uuidString:)) else { return nil }
+            let app = table["app"].flatMap { $0.isEmpty ? nil : $0 }
+            let route = LinkRoute(match: match, pattern: table["pattern"] ?? "", app: app, spaceID: spaceID)
+            return route.isValid ? route : nil
         }
 
         return config

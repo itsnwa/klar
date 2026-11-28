@@ -317,6 +317,10 @@ final class SpaceSelection: ObservableObject {
 
         guard let tab = tabManager.tabs.first(where: { $0.id == itemID }),
               spaces.spaceID(of: tab) != spaceID else { return }
+        if !keepingGroup {
+            // One a link from another app just opened may offer a route
+            LinkRouter.shared.tabWillMove(tab, toSpace: spaceID, in: tabManager)
+        }
         let wasActive = tabManager.activeTabId == tab.id
         let group = OpenTabStore.shared.group(ofPage: tab)
         if group != nil, !keepingGroup {

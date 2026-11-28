@@ -11,6 +11,11 @@
         "symbol": "lock",
         "title": "Locked private tabs",
         "detail": "Private tabs lock when your Mac locks or sleeps, or Klar has been in the background for 5 minutes, and Touch ID or your password unlocks them; you can turn this off in Settings › General."
+      },
+      {
+        "symbol": "arrow.triangle.branch",
+        "title": "Links go to the right space",
+        "detail": "In Settings › Links, send links from other apps to a space by their site, address or the app they come from, such as Slack’s links to Work; a page that’s already open is switched to instead of opened again, and Klar offers a route when you move a link’s tab to another space."
       }
     ],
     "improvements": [

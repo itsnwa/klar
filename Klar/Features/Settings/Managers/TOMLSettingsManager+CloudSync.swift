@@ -10,6 +10,11 @@ private enum SyncedSetting: String, CaseIterable {
     case customSearchEngine = "custom_search_engine"
     /// One "keyword address" per line, in order.
     case siteShortcuts = "site_shortcuts"
+    /// Settings › Links' routes as JSON, in order, without their IDs.
+    case linkRoutes = "link_routes"
+    /// A space's ID, or empty for the space in front.
+    case linkDefaultSpace = "link_default_space"
+    case reuseOpenTabsForLinks = "reuse_open_tabs_for_links"
     case tabCloseAction = "close_action"
     case openLinksInGroup = "open_links_in_group"
     case appearance = "appearance_mode"
@@ -75,6 +80,9 @@ extension TOMLSettingsManager: CloudSyncSource {
         case .searchEngine: return defaultSearchEngine.rawValue
         case .customSearchEngine: return customSearchEngineURL
         case .siteShortcuts: return siteShortcuts.map { "\($0.keyword) \($0.url)" }.joined(separator: "\n")
+        case .linkRoutes: return Self.json(linkRoutes)
+        case .linkDefaultSpace: return linkDefaultSpaceID?.uuidString ?? ""
+        case .reuseOpenTabsForLinks: return String(reuseOpenTabsForLinks)
         case .tabCloseAction: return tabCloseAction.rawValue
         case .openLinksInGroup: return String(openLinksInGroup)
         case .appearance: return appearanceMode.rawValue
@@ -108,6 +116,15 @@ extension TOMLSettingsManager: CloudSyncSource {
                 guard parts.count == 2, SiteShortcut.isValidKeyword(parts[0]), SiteShortcut.isValidURL(parts[1]) else { return nil }
                 return SiteShortcut(keyword: parts[0], url: parts[1])
             }
+        case .linkRoutes:
+            if let data = value.data(using: .utf8),
+               let routes = try? JSONDecoder().decode([LinkRoute].self, from: data) {
+                linkRoutes = routes.filter(\.isValid)
+            }
+        case .linkDefaultSpace:
+            if value.isEmpty || UUID(uuidString: value) != nil { linkDefaultSpaceID = UUID(uuidString: value) }
+        case .reuseOpenTabsForLinks:
+            if let enabled = Bool(value) { reuseOpenTabsForLinks = enabled }
         case .tabCloseAction:
             if let action = TabCloseAction(rawValue: value) { tabCloseAction = action }
         case .openLinksInGroup:
@@ -139,6 +156,14 @@ extension TOMLSettingsManager: CloudSyncSource {
         case .lockPrivateTabs:
             if let enabled = Bool(value) { lockPrivateTabs = enabled }
         }
+    }
+
+    /// Always the same text for the same routes, so it's compared as is.
+    private static func json(_ routes: [LinkRoute]) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        guard let data = try? encoder.encode(routes) else { return "[]" }
+        return String(decoding: data, as: UTF8.self)
     }
 
     private static func lines(_ value: String) -> Set<String> {
