@@ -1,7 +1,20 @@
 [
   {
     "version": "unreleased",
+    "new": [
+      {
+        "symbol": "hand.raised",
+        "title": "Trackers blocked",
+        "detail": "Known trackers no longer load in any tab, and links lose their tracking parameters; the gear in the address bar shows how many were blocked on a page, and lets a site’s trackers load if it needs them."
+      },
+      {
+        "symbol": "lock",
+        "title": "Locked private tabs",
+        "detail": "Private tabs lock when your Mac locks or sleeps, or Klar has been in the background for 5 minutes, and Touch ID or your password unlocks them; you can turn this off in Settings › General."
+      }
+    ],
     "improvements": [
+      "Private tabs get all of Safari’s Private Browsing protections, fingerprinting protection included, and Settings › General › Privacy can give them to every tab.",
       "A group’s icon is quieter: its favicons and icon sit a little smaller in a box edged with a fine line of light."
     ]
   },
